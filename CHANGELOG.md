@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2023-07-06
+
 ### Added
 - Added worker for fetching new proposals from snapshot.org
 - Added worker for fetching unknown spaces from fetched proposals
