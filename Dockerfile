@@ -1,11 +1,14 @@
 FROM golang:1.20.3-alpine3.17 AS builder
 
+ARG GITHUB_TOKEN=""
+
 # Setup base software for building app
 RUN apk update && \
     apk add bash ca-certificates git gcc g++ libc-dev binutils file
 
 # Setup token to access private repositories in gitlab. Temp solution.
-RUN git config --global --add url."https://oauth2:${GITHUB_TOKEN}@github.com/goverland-labs/".insteadOf "https://github.com/goverland-labs/"
+RUN git config --global --add \
+    url."https://oauth2:${GITHUB_TOKEN}@github.com/goverland-labs/".insteadOf "https://github.com/goverland-labs/"
 
 WORKDIR /opt
 
