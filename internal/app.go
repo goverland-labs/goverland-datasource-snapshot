@@ -100,6 +100,11 @@ func (a *Application) initDatabase() error {
 		conn = conn.Debug()
 	}
 
+	// TODO: Use real migrations intead of auto migrations from gorm
+	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}); err != nil {
+		return err
+	}
+
 	a.proposalsRepo = db.NewProposalRepo(conn)
 	a.spacesRepo = db.NewSpaceRepo(conn)
 
