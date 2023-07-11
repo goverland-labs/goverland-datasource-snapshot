@@ -1,4 +1,4 @@
-FROM golang:1.20.3-alpine3.17 AS builder
+FROM golang:1.20-alpine3.18 AS builder
 
 ARG GITHUB_TOKEN=""
 
@@ -26,7 +26,7 @@ COPY . .
 RUN go build -o bin/application .
 
 # Prepare executor image
-FROM alpine:3.17 AS production
+FROM alpine:3.18 AS production
 
 RUN apk update && \
     apk add ca-certificates libc6-compat && \
