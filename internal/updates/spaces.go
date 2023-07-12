@@ -103,8 +103,6 @@ func (w *SpacesWorker) processSpaces(spaces []*client.SpaceFragment) error {
 		if err := w.spaces.Upsert(&s); err != nil {
 			return err
 		}
-
-		// FIXME: Send to the queue
 	}
 
 	return nil

@@ -178,8 +178,6 @@ func (w *ProposalWorker) processProposals(proposals []*client.ProposalFragment) 
 		if w.createdAfter.Before(createdAfter) {
 			w.createdAfter = createdAfter
 		}
-
-		// FIXME: Send to the queue
 	}
 
 	return nil
