@@ -6,7 +6,7 @@ require (
 	github.com/Yamashou/gqlgenc v0.14.0
 	github.com/caarlos0/env/v8 v8.0.0
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/platform-events v0.0.12
+	github.com/goverland-labs/platform-events v0.0.17
 	github.com/goverland-labs/sdk-snapshot-go v0.1.1
 	github.com/nats-io/nats.go v1.27.1
 	github.com/prometheus/client_golang v1.16.0
