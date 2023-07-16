@@ -9,6 +9,7 @@ import (
 	"github.com/goverland-labs/platform-events/events/aggregator"
 	"github.com/goverland-labs/sdk-snapshot-go/client"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
 	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
@@ -35,8 +36,11 @@ func NewProposalRepo(conn *gorm.DB) *ProposalRepo {
 
 func (r *ProposalRepo) Upsert(p *Proposal) (isNew bool, err error) {
 	result := r.conn.
-		Where(Proposal{ID: p.ID}).
-		FirstOrCreate(&p)
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			UpdateAll: true,
+		}).
+		Create(&p)
 
 	if result.Error != nil {
 		return false, result.Error
@@ -61,6 +65,42 @@ func (r *ProposalRepo) GetLatestProposal() (*Proposal, error) {
 	return &p, err
 }
 
+func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int) ([]string, error) {
+	var (
+		dummy = Proposal{}
+		_     = dummy.UpdatedAt
+		_     = dummy.Snapshot
+	)
+
+	var ids []struct {
+		ID string
+	}
+
+	err := r.conn.Debug().Select("id").
+		Table("proposals").
+		Where("updated_at < ?", time.Now().Add(-interval)).
+		Where(
+			r.conn.
+				Where("to_timestamp((snapshot->'start')::double precision) <= now() and to_timestamp((snapshot->'end')::double precision) >= now()").
+				Or("updated_at < to_timestamp((snapshot->'end')::double precision) and to_timestamp((snapshot->'end')::double precision) < now()"),
+		).
+		Order("updated_at asc").
+		Limit(limit).
+		Scan(&ids).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(ids))
+	for _, row := range ids {
+		result = append(result, row.ID)
+	}
+
+	return result, nil
+}
+
 type ProposalService struct {
 	repo      *ProposalRepo
 	publisher *communicate.Publisher
@@ -80,13 +120,13 @@ func (s *ProposalService) Upsert(p *Proposal) error {
 	}
 
 	if !isNew {
-		return nil
+		return s.publishEvent(aggregator.SubjectProposalUpdated, p)
 	}
 
-	return s.publishEvent(p)
+	return s.publishEvent(aggregator.SubjectProposalCreated, p)
 }
 
-func (s *ProposalService) publishEvent(proposal *Proposal) error {
+func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error {
 	var unmarshaled client.ProposalFragment
 	if err := json.Unmarshal(proposal.Snapshot, &unmarshaled); err != nil {
 		return err
@@ -106,7 +146,7 @@ func (s *ProposalService) publishEvent(proposal *Proposal) error {
 		scores = append(scores, float32(helpers.ZeroIfNil(unmarshaled.Scores[i])))
 	}
 
-	return s.publisher.PublishJSON(context.Background(), aggregator.SubjectProposalCreated, aggregator.ProposalPayload{
+	return s.publisher.PublishJSON(context.Background(), subject, aggregator.ProposalPayload{
 		ID:            proposal.ID,
 		Ipfs:          helpers.ZeroIfNil(unmarshaled.Ipfs),
 		Author:        unmarshaled.Author,
@@ -135,6 +175,10 @@ func (s *ProposalService) publishEvent(proposal *Proposal) error {
 		ScoresUpdated: int(helpers.ZeroIfNil(unmarshaled.ScoresUpdated)),
 		Votes:         int(helpers.ZeroIfNil(unmarshaled.Votes)),
 	})
+}
+
+func (s *ProposalService) GetProposalIDsForUpdate(interval time.Duration, limit int) ([]string, error) {
+	return s.repo.GetProposalIDsForUpdate(interval, limit)
 }
 
 func (s *ProposalService) GetLatestProposal() (*Proposal, error) {

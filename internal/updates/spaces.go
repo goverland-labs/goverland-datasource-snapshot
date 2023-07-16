@@ -59,7 +59,7 @@ func (w *SpacesWorker) loop(ctx context.Context) error {
 		return nil
 	}
 
-	spaces, err := w.fetchSpacesInternal(ctx, []snapshot.ListSpaceOption{snapshot.ListSpaceWithIDs(unknownSpaces...)})
+	spaces, err := w.fetchSpacesInternal(ctx, []snapshot.ListSpaceOption{snapshot.ListSpaceWithIDFilter(unknownSpaces...)})
 	if err != nil {
 		return err
 	}

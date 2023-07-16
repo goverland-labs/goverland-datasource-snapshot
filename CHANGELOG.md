@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added worker for updating active proposals
+
 ## [0.1.4] - 2023-07-15
 
 ### Fixed
