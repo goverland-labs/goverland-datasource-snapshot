@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2023-07-16
+
 ### Fixed
 - Fixed active proposals update worker config
 - Fixed saving/updating proposal in the repository
