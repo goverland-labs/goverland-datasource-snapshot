@@ -142,7 +142,7 @@ func (a *Application) initServices() error {
 
 func (a *Application) initUpdatesWorkers() error {
 	proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
-	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
+	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
 	spaces := updates.NewSpacesWorker(a.sdk, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
 
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))

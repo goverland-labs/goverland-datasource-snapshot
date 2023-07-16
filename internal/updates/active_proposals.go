@@ -13,6 +13,8 @@ import (
 	"github.com/goverland-labs/datasource-snapshot/internal/db"
 )
 
+const gap = 30 * time.Minute
+
 type ActiveProposalsWorker struct {
 	sdk       *snapshot.SDK
 	proposals *db.ProposalService
@@ -49,9 +51,13 @@ func (w *ActiveProposalsWorker) Start(ctx context.Context) error {
 }
 
 func (w *ActiveProposalsWorker) loop(ctx context.Context) error {
-	ids, err := w.proposals.GetProposalIDsForUpdate(w.checkInterval, proposalsPerRequest)
+	ids, err := w.proposals.GetProposalIDsForUpdate(gap, proposalsPerRequest)
 	if err != nil {
 		return err
+	}
+
+	if len(ids) == 0 {
+		return nil
 	}
 
 	proposals, err := w.fetchProposalsInternal(ctx, []snapshot.ListProposalOption{

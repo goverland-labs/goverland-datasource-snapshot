@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/goverland-labs/platform-events/events/aggregator"
 	"github.com/goverland-labs/sdk-snapshot-go/client"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -35,6 +37,16 @@ func NewProposalRepo(conn *gorm.DB) *ProposalRepo {
 }
 
 func (r *ProposalRepo) Upsert(p *Proposal) (isNew bool, err error) {
+	var existed *Proposal
+	err = r.conn.
+		Select("id").
+		Where(Proposal{ID: p.ID}).
+		First(existed).
+		Error
+
+	isNew = errors.Is(err, gorm.ErrRecordNotFound)
+
+	p.UpdatedAt = time.Now()
 	result := r.conn.
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
@@ -46,7 +58,7 @@ func (r *ProposalRepo) Upsert(p *Proposal) (isNew bool, err error) {
 		return false, result.Error
 	}
 
-	return result.RowsAffected > 0, nil
+	return isNew, nil
 }
 
 func (r *ProposalRepo) GetLatestProposal() (*Proposal, error) {
@@ -120,9 +132,11 @@ func (s *ProposalService) Upsert(p *Proposal) error {
 	}
 
 	if !isNew {
+		log.Debug().Str("proposal", fmt.Sprintf("%s/%s", p.SpaceID, p.ID)).Msg("proposal updated")
 		return s.publishEvent(aggregator.SubjectProposalUpdated, p)
 	}
 
+	log.Debug().Str("proposal", fmt.Sprintf("%s/%s", p.SpaceID, p.ID)).Msg("proposal created")
 	return s.publishEvent(aggregator.SubjectProposalCreated, p)
 }
 
