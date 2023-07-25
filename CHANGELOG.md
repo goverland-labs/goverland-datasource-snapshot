@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed illegal chars in the snapshot
+
 ## [0.2.1] - 2023-07-16
 
 ### Fixed

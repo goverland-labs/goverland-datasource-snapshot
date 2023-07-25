@@ -80,6 +80,8 @@ func NewSpaceService(repo *SpaceRepo, publisher *communicate.Publisher) *SpaceSe
 }
 
 func (s *SpaceService) Upsert(space *Space) error {
+	space.Snapshot = helpers.EscapeIllegalCharactersBytes(space.Snapshot)
+
 	isNew, err := s.repo.Upsert(space)
 	if err != nil {
 		return err
