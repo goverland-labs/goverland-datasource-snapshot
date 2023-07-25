@@ -126,6 +126,9 @@ func NewProposalService(repo *ProposalRepo, publisher *communicate.Publisher) *P
 }
 
 func (s *ProposalService) Upsert(p *Proposal) error {
+	// Remove illegal chars from the whole snapshot
+	p.Snapshot = helpers.EscapeIllegalCharactersBytes(p.Snapshot)
+
 	isNew, err := s.repo.Upsert(p)
 	if err != nil {
 		return err
