@@ -69,13 +69,44 @@ func (w *ActiveProposalsWorker) loop(ctx context.Context) error {
 		return err
 	}
 
-	log.Info().Int("count", len(proposals)).Msg("updated proposals")
+	log.Info().Int("requested", len(ids)).Int("fetched", len(proposals)).Msg("updated proposals")
 
 	if err := w.processProposals(proposals); err != nil {
 		return err
 	}
 
+	forDeletion := findProposalIDsForDeletion(ids, proposals)
+	log.Info().Int("delete", len(forDeletion)).Msg("deleted proposals")
+
+	if err := w.proposals.Delete(forDeletion); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func findProposalIDsForDeletion(requestedIDs []string, fetched []*client.ProposalFragment) []string {
+	ids := make([]string, 0, len(requestedIDs))
+
+	for i := range requestedIDs {
+		if containsID(requestedIDs[i], fetched) {
+			continue
+		}
+
+		ids = append(ids, requestedIDs[i])
+	}
+
+	return ids
+}
+
+func containsID(id string, proposals []*client.ProposalFragment) bool {
+	for i := range proposals {
+		if proposals[i].ID == id {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (w *ActiveProposalsWorker) fetchProposalsInternal(ctx context.Context, opts []snapshot.ListProposalOption) ([]*client.ProposalFragment, error) {

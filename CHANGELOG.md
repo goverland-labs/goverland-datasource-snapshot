@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed active proposals worker - delete not fetched proposals
+
 ## [0.2.3] - 2023-07-26
 
 ### Fixed

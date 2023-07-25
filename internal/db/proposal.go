@@ -77,10 +77,24 @@ func (r *ProposalRepo) GetLatestProposal() (*Proposal, error) {
 	return &p, err
 }
 
+func (r *ProposalRepo) DeleteByID(id ...string) error {
+	var (
+		dummy = Proposal{}
+		_     = dummy.ID
+	)
+
+	err := r.conn.
+		Delete([]Proposal{}, id).
+		Error
+
+	return err
+}
+
 func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int) ([]string, error) {
 	var (
 		dummy = Proposal{}
 		_     = dummy.UpdatedAt
+		_     = dummy.DeletedAt
 		_     = dummy.Snapshot
 	)
 
@@ -91,6 +105,7 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int
 	err := r.conn.Debug().Select("id").
 		Table("proposals").
 		Where("updated_at < ?", time.Now().Add(-interval)).
+		Where("deleted_at is null").
 		Where(
 			r.conn.
 				Where("to_timestamp((snapshot->'start')::double precision) <= now() and to_timestamp((snapshot->'end')::double precision) >= now()").
@@ -141,6 +156,16 @@ func (s *ProposalService) Upsert(p *Proposal) error {
 
 	log.Debug().Str("proposal", fmt.Sprintf("%s/%s", p.SpaceID, p.ID)).Msg("proposal created")
 	return s.publishEvent(aggregator.SubjectProposalCreated, p)
+}
+
+func (s *ProposalService) Delete(ids []string) error {
+	// TODO: publish event
+
+	if len(ids) == 0 {
+		return nil
+	}
+
+	return s.repo.DeleteByID(ids...)
 }
 
 func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error {
