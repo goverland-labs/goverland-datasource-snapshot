@@ -7,7 +7,7 @@ require (
 	github.com/caarlos0/env/v8 v8.0.0
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/platform-events v0.0.17
-	github.com/goverland-labs/sdk-snapshot-go v0.2.1
+	github.com/goverland-labs/sdk-snapshot-go v0.3.0
 	github.com/nats-io/nats.go v1.27.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/rs/zerolog v1.29.1

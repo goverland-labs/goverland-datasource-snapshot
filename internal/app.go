@@ -64,6 +64,7 @@ func (a *Application) bootstrap() error {
 		// Init Dependencies
 		a.initDatabase,
 		a.initNats,
+		a.initSnapshot,
 		a.initServices,
 
 		// Init Workers: Application
@@ -132,8 +133,18 @@ func (a *Application) initNats() error {
 	return nil
 }
 
+func (a *Application) initSnapshot() error {
+	var opts []snapshot.Option
+	if a.cfg.Snapshot.APIKey != "" {
+		opts = append(opts, snapshot.WithApiKey(a.cfg.Snapshot.APIKey))
+	}
+
+	a.sdk = snapshot.NewSDK(opts...)
+
+	return nil
+}
+
 func (a *Application) initServices() error {
-	a.sdk = snapshot.NewSDK()
 	a.proposalsService = db.NewProposalService(a.proposalsRepo, a.publisher)
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 

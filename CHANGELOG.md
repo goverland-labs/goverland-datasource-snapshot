@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Updated SDK version
+
+### Added
+- Added API key for snapshot.org
+
 ## [0.2.4] - 2023-07-26
 
 ### Fixed
