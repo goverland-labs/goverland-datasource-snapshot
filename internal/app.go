@@ -31,6 +31,9 @@ type Application struct {
 	spacesRepo    *db.SpaceRepo
 	spacesService *db.SpaceService
 
+	votesRepo    *db.VoteRepo
+	votesService *db.VoteService
+
 	publisher *communicate.Publisher
 
 	sdk *snapshot.SDK
@@ -102,12 +105,13 @@ func (a *Application) initDatabase() error {
 	}
 
 	// TODO: Use real migrations intead of auto migrations from gorm
-	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}); err != nil {
+	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}); err != nil {
 		return err
 	}
 
 	a.proposalsRepo = db.NewProposalRepo(conn)
 	a.spacesRepo = db.NewSpaceRepo(conn)
+	a.votesRepo = db.NewVoteRepo(conn)
 
 	return err
 }
@@ -147,6 +151,7 @@ func (a *Application) initSnapshot() error {
 func (a *Application) initServices() error {
 	a.proposalsService = db.NewProposalService(a.proposalsRepo, a.publisher)
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
+	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
 
 	return nil
 }
@@ -155,10 +160,14 @@ func (a *Application) initUpdatesWorkers() error {
 	proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
 	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
 	spaces := updates.NewSpacesWorker(a.sdk, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
+	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.cfg.Snapshot.VotesCheckInterval)
 
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes publisher", votes.Publish, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 
 	return nil
 }
