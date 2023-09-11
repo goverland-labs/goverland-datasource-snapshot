@@ -147,7 +147,7 @@ func (r *ProposalRepo) GetProposalForVotes(limit int) ([]string, error) {
 		Where("deleted_at is null").
 		Where("to_timestamp((snapshot->'end')::double precision) < now()").
 		Where("vote_processed = ? or vote_processed is null", false).
-		Order("created_at asc").
+		Order("created_at desc").
 		Limit(limit).
 		Scan(&ids).
 		Error
