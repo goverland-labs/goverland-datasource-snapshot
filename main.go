@@ -7,6 +7,7 @@ import (
 
 	"github.com/goverland-labs/datasource-snapshot/internal"
 	"github.com/goverland-labs/datasource-snapshot/internal/config"
+	"github.com/goverland-labs/datasource-snapshot/internal/logger"
 )
 
 var cfg config.App
@@ -22,7 +23,7 @@ func init() {
 		panic(err)
 	}
 	zerolog.SetGlobalLevel(level)
-	process.SetLogger(&ProcessManagerLogger{})
+	process.SetLogger(&logger.ProcessManagerLogger{})
 }
 
 func main() {

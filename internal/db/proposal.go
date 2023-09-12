@@ -24,6 +24,8 @@ type Proposal struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt  `gorm:"index"`
 	Snapshot  json.RawMessage `gorm:"type:jsonb;serializer:json"`
+
+	VoteProcessed bool
 }
 
 type ProposalRepo struct {
@@ -128,6 +130,56 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int
 	return result, nil
 }
 
+func (r *ProposalRepo) GetProposalForVotes(limit int) ([]string, error) {
+	var (
+		dummy = Proposal{}
+		_     = dummy.UpdatedAt
+		_     = dummy.DeletedAt
+		_     = dummy.Snapshot
+	)
+
+	var ids []struct {
+		ID string
+	}
+
+	err := r.conn.Debug().Select("id").
+		Table("proposals").
+		Where("deleted_at is null").
+		Where("to_timestamp((snapshot->'end')::double precision) < now()").
+		Where("vote_processed = ? or vote_processed is null", false).
+		Order("created_at desc").
+		Limit(limit).
+		Scan(&ids).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(ids))
+	for _, row := range ids {
+		result = append(result, row.ID)
+	}
+
+	return result, nil
+}
+
+func (r *ProposalRepo) MarkVotesProcessed(id string) error {
+	var (
+		dummy = Proposal{}
+		_     = dummy.ID
+		_     = dummy.UpdatedAt
+		_     = dummy.VoteProcessed
+	)
+
+	return r.conn.
+		Model(Proposal{}).
+		Omit("updated_at").
+		Where("id = ?", id).
+		Update("vote_processed", true).
+		Error
+}
+
 type ProposalService struct {
 	repo      *ProposalRepo
 	publisher *communicate.Publisher
@@ -223,6 +275,10 @@ func (s *ProposalService) GetProposalIDsForUpdate(interval time.Duration, limit 
 	return s.repo.GetProposalIDsForUpdate(interval, limit)
 }
 
+func (s *ProposalService) GetProposalForVotes(limit int) ([]string, error) {
+	return s.repo.GetProposalForVotes(limit)
+}
+
 func (s *ProposalService) GetLatestProposal() (*Proposal, error) {
 	p, err := s.repo.GetLatestProposal()
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -233,4 +289,8 @@ func (s *ProposalService) GetLatestProposal() (*Proposal, error) {
 	}
 
 	return p, nil
+}
+
+func (s *ProposalService) MarkVotesProcessed(id string) error {
+	return s.repo.MarkVotesProcessed(id)
 }
