@@ -106,6 +106,10 @@ func (w *VoteWorker) Publish(ctx context.Context) error {
 }
 
 func (w *VoteWorker) loop(ctx context.Context) error {
+	defer func(start time.Time) {
+		log.Info().Msgf("FQtx72k: votes loop took: %f seconds", time.Since(start).Seconds())
+	}(time.Now())
+
 	ids, err := w.proposals.GetProposalForVotes(voteProposalLimit)
 	if err != nil {
 		return fmt.Errorf("get proposals for votes: %w", err)
@@ -118,13 +122,16 @@ func (w *VoteWorker) loop(ctx context.Context) error {
 			snapshot.ListVotesWithProposalIDsFilter(id),
 		}
 
+		start := time.Now()
 		createdAfter := w.getLastVoteCreatedAt(id)
 		if !createdAfter.IsZero() {
 			opts = append(opts, snapshot.ListVotesCreatedAfter(createdAfter))
 		}
+		log.Info().Msgf("FQtx72k: getLastVoteCreatedAt[%s] took: %f seconds", id, time.Since(start).Seconds())
 
 		offset := 0
 		for {
+			start = time.Now()
 			votes, err := w.fetchVotes(ctx, offset, opts)
 			if errors.Is(err, snapshot.ErrTooManyRequests) {
 				log.Warn().Err(err).Msg("snapshot api limits are reached")
@@ -134,12 +141,15 @@ func (w *VoteWorker) loop(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+			log.Info().Msgf("FQtx72k: fetchVotes[%s] took: %f seconds", id, time.Since(start).Seconds())
 
 			log.Info().Int("count", len(votes)).Msg("fetched votes")
 
+			start = time.Now()
 			if err := w.processVotes(votes); err != nil {
 				return err
 			}
+			log.Info().Msgf("FQtx72k: processVotes[%s] took: %f seconds", id, time.Since(start).Seconds())
 
 			if len(votes) < votesPerRequest {
 				err := w.proposals.MarkVotesProcessed(id)
@@ -268,8 +278,9 @@ func (w *VoteWorker) fetchVotesInternal(ctx context.Context, opts []snapshot.Lis
 }
 
 func (w *VoteWorker) processVotes(votes []*client.VoteFragment) error {
-	for _, vote := range votes {
-		p := db.Vote{
+	converted := make([]db.Vote, len(votes))
+	for i, vote := range votes {
+		converted[i] = db.Vote{
 			ID:           vote.ID,
 			Ipfs:         *vote.GetIpfs(),
 			CreatedAt:    time.Unix(vote.GetCreated(), 0),
@@ -285,13 +296,9 @@ func (w *VoteWorker) processVotes(votes []*client.VoteFragment) error {
 			VpByStrategy: convertVpByStrategy(vote.GetVpByStrategy()),
 			VpState:      *vote.GetVpState(),
 		}
-
-		if err := w.votes.Upsert(&p); err != nil {
-			return err
-		}
 	}
 
-	return nil
+	return w.votes.BatchCreate(converted)
 }
 
 func convertVpByStrategy(data []*float64) []float64 {

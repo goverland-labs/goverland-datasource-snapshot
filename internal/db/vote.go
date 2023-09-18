@@ -10,6 +10,7 @@ import (
 	"github.com/goverland-labs/platform-events/events/aggregator"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
 )
@@ -52,6 +53,13 @@ func (r *VoteRepo) Upsert(v *Vote) (isNew bool, err error) {
 	}
 
 	return result.RowsAffected > 0, nil
+}
+
+// BatchCreate creates votes in batch
+func (r *VoteRepo) BatchCreate(data []Vote) error {
+	return r.conn.Model(&Vote{}).Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).CreateInBatches(data, 500).Error
 }
 
 func (r *VoteRepo) GetLatestVote(id string) (*Vote, error) {
@@ -114,6 +122,10 @@ func (s *VoteService) Upsert(vote *Vote) error {
 	_, err := s.repo.Upsert(vote)
 
 	return err
+}
+
+func (s *VoteService) BatchCreate(votes []Vote) error {
+	return s.repo.BatchCreate(votes)
 }
 
 func (s *VoteService) GetLatestVote(id string) (*Vote, error) {
