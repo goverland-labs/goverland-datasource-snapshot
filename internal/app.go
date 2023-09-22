@@ -37,6 +37,8 @@ type Application struct {
 	publisher *communicate.Publisher
 
 	sdk *snapshot.SDK
+
+	isCliMode bool
 }
 
 func NewApplication(cfg config.App) (*Application, error) {
@@ -69,13 +71,14 @@ func (a *Application) bootstrap() error {
 		a.initNats,
 		a.initSnapshot,
 		a.initServices,
+	}
 
+	if !a.isCliMode {
 		// Init Workers: Application
-		a.initUpdatesWorkers,
-
+		initializers = append(initializers, a.initUpdatesWorkers)
 		// Init Workers: System
-		a.initPrometheusWorker,
-		a.initHealthWorker,
+		initializers = append(initializers, a.initPrometheusWorker)
+		initializers = append(initializers, a.initHealthWorker)
 	}
 
 	for _, initializer := range initializers {
