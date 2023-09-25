@@ -20,7 +20,7 @@ import (
 
 const (
 	votesPerRequest   = 1000
-	votePublishLimit  = 500
+	votePublishLimit  = 1000
 	voteMaxOffset     = 5000
 	voteProposalLimit = 20
 )

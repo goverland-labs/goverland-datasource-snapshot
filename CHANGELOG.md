@@ -8,7 +8,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
-- CLI commands for importing spaces and proposals from CSV dumps
+- CLI commands for importing spaces, proposals and votes from CSV dumps
 
 ## [0.2.6] - 2023-09-12
 

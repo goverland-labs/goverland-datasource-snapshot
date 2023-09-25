@@ -34,6 +34,8 @@ type Import struct {
 	Spaces    *db.SpaceService
 	Proposals *db.ProposalService
 	Votes     *db.VoteService
+
+	votesBatch []db.Vote
 }
 
 func (c *Import) GetName() string {
@@ -55,6 +57,9 @@ func (c *Import) ParseArgs(args ...string) (Arguments, error) {
 }
 
 func (c *Import) Execute(args Arguments) error {
+	start := time.Now()
+	log.Info().Msg("import started")
+
 	importType, err := c.getImportType(args)
 	if err != nil {
 		return err
@@ -98,15 +103,21 @@ func (c *Import) Execute(args Arguments) error {
 			continue
 		}
 
-		if idx >= offset+limit {
+		if limit != 0 && idx > offset+limit {
 			break
+		}
+
+		if idx%1000 == 0 {
+			log.Info().Msgf("process %d lines", idx)
 		}
 
 		switch importType {
 		case ImportTypeSpace:
-			err = c.processSpace(line)
+			err = c.processSpace(line, ttl)
 		case ImportTypeProposal:
-			err = c.processProposal(line)
+			err = c.processProposal(line, ttl)
+		case ImportTypeVote:
+			err = c.processVotes(line, ttl)
 		default:
 			panic(fmt.Sprintf("import type is not implemented: %s", importType))
 		}
@@ -114,16 +125,22 @@ func (c *Import) Execute(args Arguments) error {
 		if err != nil {
 			log.Error().Err(err).Msgf("upsert %s: %d: %s", importType, idx, line[0])
 		}
+	}
 
-		if ttl != nil {
-			<-time.After(*ttl)
+	// todo: separate commands
+	if len(c.votesBatch) != 0 {
+		err := c.Votes.BatchCreate(c.votesBatch)
+		if err != nil {
+			return fmt.Errorf("batch create: %w", err)
 		}
 	}
+
+	log.Info().Msgf("import finished. Took: %v", time.Since(start))
 
 	return nil
 }
 
-func (c *Import) processSpace(line []string) error {
+func (c *Import) processSpace(line []string, ttl *time.Duration) error {
 	space := &db.Space{
 		ID:        line[0],
 		CreatedAt: getTimeFromString(line[5]),
@@ -131,10 +148,19 @@ func (c *Import) processSpace(line []string) error {
 		Snapshot:  json.RawMessage(line[2]),
 	}
 
-	return c.Spaces.Upsert(space)
+	err := c.Spaces.Upsert(space)
+	if err != nil {
+		return fmt.Errorf("upsert space: %w", err)
+	}
+
+	if ttl != nil {
+		<-time.After(*ttl)
+	}
+
+	return nil
 }
 
-func (c *Import) processProposal(line []string) error {
+func (c *Import) processProposal(line []string, ttl *time.Duration) error {
 	strategies, err := helpers.Unmarshal([]*client.StrategyFragment{}, json.RawMessage(line[8]))
 	if err != nil {
 		return fmt.Errorf("convert strategies: %w", err)
@@ -198,7 +224,56 @@ func (c *Import) processProposal(line []string) error {
 		VoteProcessed: false,
 	}
 
-	return c.Proposals.Upsert(pr)
+	err = c.Proposals.Upsert(pr)
+	if err != nil {
+		return fmt.Errorf("upsert proposal: %w", err)
+	}
+
+	if ttl != nil {
+		<-time.After(*ttl)
+	}
+
+	return nil
+}
+
+func (c *Import) processVotes(line []string, ttl *time.Duration) error {
+	vpByStrategy, err := helpers.Unmarshal([]float64{}, json.RawMessage(line[11]))
+	if err != nil {
+		return fmt.Errorf("convert vp by strategy: %w", err)
+	}
+
+	vote := db.Vote{
+		ID:           line[0],
+		Ipfs:         line[1],
+		CreatedAt:    getTimeFromString(line[3]),
+		UpdatedAt:    time.Now(),
+		Voter:        line[2],
+		SpaceID:      line[4],
+		ProposalID:   line[5],
+		Choice:       json.RawMessage(line[6]),
+		Reason:       line[8],
+		App:          line[9],
+		Vp:           getFloat64FromString(line[10]),
+		VpByStrategy: vpByStrategy,
+		VpState:      line[12],
+	}
+
+	c.votesBatch = append(c.votesBatch, vote)
+
+	if len(c.votesBatch) >= 1000 {
+		err := c.Votes.BatchCreate(c.votesBatch)
+		if err != nil {
+			return fmt.Errorf("batch create: %w", err)
+		}
+
+		if ttl != nil {
+			<-time.After(*ttl)
+		}
+
+		c.votesBatch = make([]db.Vote, 1200)
+	}
+
+	return nil
 }
 
 func getTimeFromString(val string) time.Time {
