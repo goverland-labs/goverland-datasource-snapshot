@@ -270,7 +270,7 @@ func (c *Import) processVotes(line []string, ttl *time.Duration) error {
 			<-time.After(*ttl)
 		}
 
-		c.votesBatch = make([]db.Vote, 1200)
+		c.votesBatch = make([]db.Vote, 0, 1200)
 	}
 
 	return nil
