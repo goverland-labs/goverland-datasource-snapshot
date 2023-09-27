@@ -250,7 +250,7 @@ func (c *Import) processVotes(line []string, ttl *time.Duration) error {
 		Voter:        line[2],
 		SpaceID:      line[4],
 		ProposalID:   line[5],
-		Choice:       json.RawMessage(line[6]),
+		Choice:       prepareChoice(line[6]),
 		Reason:       line[8],
 		App:          line[9],
 		Vp:           getFloat64FromString(line[10]),
@@ -274,6 +274,32 @@ func (c *Import) processVotes(line []string, ttl *time.Duration) error {
 	}
 
 	return nil
+}
+
+func prepareChoice(str string) json.RawMessage {
+	raw := json.RawMessage(str)
+
+	var number int64
+	if _, err := helpers.Unmarshal(number, raw); err == nil {
+		return raw
+	}
+
+	if _, err := helpers.Unmarshal(map[string]int{}, raw); err == nil {
+		return raw
+	}
+
+	if _, err := helpers.Unmarshal([]string{}, raw); err == nil {
+		return raw
+	}
+
+	if _, err := helpers.Unmarshal([]int{}, raw); err == nil {
+		return raw
+	}
+
+	// should be string
+	val, _ := json.Marshal(str)
+
+	return val
 }
 
 func getTimeFromString(val string) time.Time {
