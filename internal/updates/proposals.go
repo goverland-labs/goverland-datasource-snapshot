@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	createdAtGap        = time.Hour
-	proposalsPerRequest = 500
-	proposalsMaxOffset  = 5000
+	proposalCreatedAtGap = time.Hour
+	proposalsPerRequest  = 500
+	proposalsMaxOffset   = 5000
 )
 
 type ProposalWorker struct {
@@ -174,7 +174,7 @@ func (w *ProposalWorker) processProposals(proposals []*client.ProposalFragment) 
 			return err
 		}
 
-		createdAfter := p.CreatedAt.Add(-createdAtGap)
+		createdAfter := p.CreatedAt.Add(-proposalCreatedAtGap)
 		if w.createdAfter.Before(createdAfter) {
 			w.createdAfter = createdAfter
 		}
@@ -193,7 +193,7 @@ func (w *ProposalWorker) getLastProposalCreatedAt() time.Time {
 	}
 
 	if lastProposal != nil {
-		createdAfter = lastProposal.CreatedAt.Add(-createdAtGap)
+		createdAfter = lastProposal.CreatedAt.Add(-proposalCreatedAtGap)
 	}
 
 	return createdAfter
