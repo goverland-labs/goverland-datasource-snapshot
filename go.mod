@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/Yamashou/gqlgenc v0.14.0
+	github.com/akamensky/argparse v1.4.0
 	github.com/caarlos0/env/v8 v8.0.0
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/platform-events v0.1.7

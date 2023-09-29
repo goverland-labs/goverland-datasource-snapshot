@@ -19,8 +19,9 @@ import (
 )
 
 const (
+	votesCreatedAtGap = 5 * time.Minute
 	votesPerRequest   = 1000
-	votePublishLimit  = 500
+	votePublishLimit  = 1000
 	voteMaxOffset     = 5000
 	voteProposalLimit = 20
 )
@@ -320,7 +321,7 @@ func (w *VoteWorker) getLastVoteCreatedAt(id string) time.Time {
 	}
 
 	if lastVote != nil {
-		createdAfter = lastVote.CreatedAt.Add(-createdAtGap)
+		createdAfter = lastVote.CreatedAt.Add(-votesCreatedAtGap)
 	}
 
 	return createdAfter

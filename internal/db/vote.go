@@ -85,7 +85,6 @@ func (r *VoteRepo) SelectForPublish(limit int) ([]Vote, error) {
 
 	err := r.conn.
 		Where("published is false").
-		Order("created_at ASC").
 		Limit(limit).
 		Find(&list).
 		Error
@@ -141,12 +140,13 @@ func (s *VoteService) GetLatestVote(id string) (*Vote, error) {
 }
 
 func (s *VoteService) Publish(limit int) error {
+	now := time.Now()
 	votes, err := s.repo.SelectForPublish(limit)
 	if err != nil {
 		return fmt.Errorf("select votes: %w", err)
 	}
 
-	log.Info().Msgf("selected %d votes", len(votes))
+	log.Info().Msgf("selected %d votes in %f seconds", len(votes), time.Since(now).Seconds())
 
 	if len(votes) == 0 {
 		return nil
@@ -170,19 +170,21 @@ func (s *VoteService) Publish(limit int) error {
 		}
 	}
 
+	now = time.Now()
 	err = s.publisher.PublishJSON(context.Background(), aggregator.SubjectVoteCreated, pl)
 	if err != nil {
 		return fmt.Errorf("publish: %w", err)
 	}
 
-	log.Info().Msg("votes are published")
+	log.Info().Msgf("votes are published in %f seconds", time.Since(now).Seconds())
 
+	now = time.Now()
 	err = s.repo.MarkAsPublished(votes)
 	if err != nil {
 		return fmt.Errorf("mark as published: %w", err)
 	}
 
-	log.Info().Msg("votes are marked as read")
+	log.Info().Msgf("votes are marked as read in %f seconds", time.Since(now).Seconds())
 
 	return nil
 }
