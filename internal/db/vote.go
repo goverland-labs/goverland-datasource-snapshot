@@ -10,6 +10,7 @@ import (
 	"github.com/goverland-labs/platform-events/events/aggregator"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
 )
@@ -54,6 +55,13 @@ func (r *VoteRepo) Upsert(v *Vote) (isNew bool, err error) {
 	return result.RowsAffected > 0, nil
 }
 
+// BatchCreate creates votes in batch
+func (r *VoteRepo) BatchCreate(data []Vote) error {
+	return r.conn.Model(&Vote{}).Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).CreateInBatches(data, 500).Error
+}
+
 func (r *VoteRepo) GetLatestVote(id string) (*Vote, error) {
 	var (
 		dummy = Vote{}
@@ -77,7 +85,6 @@ func (r *VoteRepo) SelectForPublish(limit int) ([]Vote, error) {
 
 	err := r.conn.
 		Where("published is false").
-		Order("created_at ASC").
 		Limit(limit).
 		Find(&list).
 		Error
@@ -116,6 +123,10 @@ func (s *VoteService) Upsert(vote *Vote) error {
 	return err
 }
 
+func (s *VoteService) BatchCreate(votes []Vote) error {
+	return s.repo.BatchCreate(votes)
+}
+
 func (s *VoteService) GetLatestVote(id string) (*Vote, error) {
 	p, err := s.repo.GetLatestVote(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -129,12 +140,13 @@ func (s *VoteService) GetLatestVote(id string) (*Vote, error) {
 }
 
 func (s *VoteService) Publish(limit int) error {
+	now := time.Now()
 	votes, err := s.repo.SelectForPublish(limit)
 	if err != nil {
 		return fmt.Errorf("select votes: %w", err)
 	}
 
-	log.Info().Msgf("selected %d votes", len(votes))
+	log.Info().Msgf("selected %d votes in %f seconds", len(votes), time.Since(now).Seconds())
 
 	if len(votes) == 0 {
 		return nil
@@ -158,19 +170,21 @@ func (s *VoteService) Publish(limit int) error {
 		}
 	}
 
+	now = time.Now()
 	err = s.publisher.PublishJSON(context.Background(), aggregator.SubjectVoteCreated, pl)
 	if err != nil {
 		return fmt.Errorf("publish: %w", err)
 	}
 
-	log.Info().Msg("votes are published")
+	log.Info().Msgf("votes are published in %f seconds", time.Since(now).Seconds())
 
+	now = time.Now()
 	err = s.repo.MarkAsPublished(votes)
 	if err != nil {
 		return fmt.Errorf("mark as published: %w", err)
 	}
 
-	log.Info().Msg("votes are marked as read")
+	log.Info().Msgf("votes are marked as read in %f seconds", time.Since(now).Seconds())
 
 	return nil
 }
