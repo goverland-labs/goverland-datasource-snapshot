@@ -21,7 +21,7 @@ import (
 const (
 	votesCreatedAtGap = 5 * time.Minute
 	votesPerRequest   = 1000
-	votePublishLimit  = 1000
+	votePublishLimit  = 350
 	voteMaxOffset     = 5000
 	voteProposalLimit = 20
 )
