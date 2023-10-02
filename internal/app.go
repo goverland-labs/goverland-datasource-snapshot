@@ -170,7 +170,6 @@ func (a *Application) initUpdatesWorkers() error {
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes publisher", votes.Publish, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 
 	return nil
 }

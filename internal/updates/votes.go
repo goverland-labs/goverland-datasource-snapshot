@@ -21,7 +21,7 @@ import (
 const (
 	votesCreatedAtGap = 5 * time.Minute
 	votesPerRequest   = 1000
-	votePublishLimit  = 1000
+	votePublishLimit  = 350
 	voteMaxOffset     = 5000
 	voteProposalLimit = 20
 )
@@ -83,25 +83,6 @@ func (w *VoteWorker) LoadActive(ctx context.Context) error {
 
 			return err
 		case <-time.After(w.checkInterval):
-		}
-	}
-}
-
-func (w *VoteWorker) Publish(ctx context.Context) error {
-	for {
-		if err := w.votes.Publish(votePublishLimit); err != nil {
-			log.Error().Err(err).Msg("vote publish")
-		}
-
-		select {
-		case <-ctx.Done():
-			err := ctx.Err()
-			if errors.Is(err, context.Canceled) {
-				return nil
-			}
-
-			return err
-		case <-time.After(10 * time.Second):
 		}
 	}
 }
@@ -299,7 +280,17 @@ func (w *VoteWorker) processVotes(votes []*client.VoteFragment) error {
 		}
 	}
 
-	return w.votes.BatchCreate(converted)
+	err := w.votes.BatchCreate(converted)
+	if err != nil {
+		return fmt.Errorf("batchCreate: %w", err)
+	}
+
+	err = w.votes.Publish(converted, votePublishLimit)
+	if err != nil {
+		return fmt.Errorf("publish: %w", err)
+	}
+
+	return nil
 }
 
 func convertVpByStrategy(data []*float64) []float64 {

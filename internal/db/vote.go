@@ -139,15 +139,7 @@ func (s *VoteService) GetLatestVote(id string) (*Vote, error) {
 	return p, nil
 }
 
-func (s *VoteService) Publish(limit int) error {
-	now := time.Now()
-	votes, err := s.repo.SelectForPublish(limit)
-	if err != nil {
-		return fmt.Errorf("select votes: %w", err)
-	}
-
-	log.Info().Msgf("selected %d votes in %f seconds", len(votes), time.Since(now).Seconds())
-
+func (s *VoteService) Publish(votes []Vote, batchSize int) error {
 	if len(votes) == 0 {
 		return nil
 	}
@@ -170,21 +162,22 @@ func (s *VoteService) Publish(limit int) error {
 		}
 	}
 
-	now = time.Now()
-	err = s.publisher.PublishJSON(context.Background(), aggregator.SubjectVoteCreated, pl)
-	if err != nil {
-		return fmt.Errorf("publish: %w", err)
+	now := time.Now()
+	for _, chunk := range chunkBy(pl, batchSize) {
+		err := s.publisher.PublishJSON(context.Background(), aggregator.SubjectVoteCreated, chunk)
+		if err != nil {
+			return fmt.Errorf("publish: %w", err)
+		}
 	}
-
 	log.Info().Msgf("votes are published in %f seconds", time.Since(now).Seconds())
 
-	now = time.Now()
-	err = s.repo.MarkAsPublished(votes)
-	if err != nil {
-		return fmt.Errorf("mark as published: %w", err)
+	return nil
+}
+
+func chunkBy[T any](items []T, chunkSize int) (chunks [][]T) {
+	for chunkSize < len(items) {
+		items, chunks = items[chunkSize:], append(chunks, items[0:chunkSize:chunkSize])
 	}
 
-	log.Info().Msgf("votes are marked as read in %f seconds", time.Since(now).Seconds())
-
-	return nil
+	return append(chunks, items)
 }
