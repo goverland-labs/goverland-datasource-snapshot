@@ -233,10 +233,25 @@ func (s *ProposalService) Upsert(p *Proposal) error {
 }
 
 func (s *ProposalService) Delete(ids []string) error {
-	// TODO: publish event
-
 	if len(ids) == 0 {
 		return nil
+	}
+
+	for i := range ids {
+		go func(id string) {
+			if err := s.publisher.PublishJSON(
+				context.Background(),
+				aggregator.SubjectProposalDeleted,
+				aggregator.ProposalPayload{ID: id},
+			); err != nil {
+				log.Err(err).
+					Msgf(
+						"publish proposal %s to %s",
+						id,
+						aggregator.SubjectProposalDeleted,
+					)
+			}
+		}(ids[i])
 	}
 
 	return s.repo.DeleteByID(ids...)
