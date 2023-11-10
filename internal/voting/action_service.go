@@ -26,7 +26,11 @@ func NewActionService(snapshotSDK snapshotSDK, proposalGetter proposalGetter, ty
 	return &ActionService{snapshotSDK: snapshotSDK, proposalGetter: proposalGetter, typedSignDataBuilder: typedSignDataBuilder}
 }
 
-func (a *ActionService) Validate(validateParams *ValidateParams) (ValidateResult, error) {
+func (a *ActionService) Validate(validateParams ValidateParams) (ValidateResult, error) {
+	log.Info().Fields(map[string]any{
+		"req": validateParams,
+	}).Msg("got validation request")
+
 	proposal, err := a.proposalGetter.GetByID(validateParams.Proposal)
 	if err != nil {
 		return ValidateResult{}, err
@@ -59,7 +63,7 @@ func (a *ActionService) Validate(validateParams *ValidateParams) (ValidateResult
 	}, nil
 }
 
-func (a *ActionService) Prepare(prepareParams *PrepareParams) (PrepareResult, error) {
+func (a *ActionService) Prepare(prepareParams PrepareParams) (PrepareResult, error) {
 	proposal, err := a.proposalGetter.GetByID(prepareParams.Proposal)
 	if err != nil {
 		return PrepareResult{}, err
@@ -81,7 +85,7 @@ func (a *ActionService) Prepare(prepareParams *PrepareParams) (PrepareResult, er
 	}, nil
 }
 
-func (a *ActionService) validateVotingPower(validateParams *ValidateParams, pFragment *client.ProposalFragment) (validateVPResult, error) {
+func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFragment *client.ProposalFragment) (validateVPResult, error) {
 	params := snapshot.GetVotingPowerParams{
 		Address:    validateParams.Voter,
 		Network:    pFragment.Network,
@@ -112,7 +116,7 @@ func (a *ActionService) validateVotingPower(validateParams *ValidateParams, pFra
 	}, nil
 }
 
-func (a *ActionService) validateVote(validateParams *ValidateParams, pFragment *client.ProposalFragment) (validateVoteResult, error) {
+func (a *ActionService) validateVote(validateParams ValidateParams, pFragment *client.ProposalFragment) (validateVoteResult, error) {
 	if pFragment.Validation.Name == "any" {
 		return validateVoteResult{
 			validation: validation{ok: true},
@@ -150,10 +154,14 @@ func (a *ActionService) validateVote(validateParams *ValidateParams, pFragment *
 func convertStrategies(strategies []*client.StrategyFragment) []snapshot.StrategyFragment {
 	var result []snapshot.StrategyFragment
 	for _, strategy := range strategies {
+		params := make(map[string]interface{})
+		if strategy.Params != nil {
+			params = strategy.Params
+		}
 		result = append(result, snapshot.StrategyFragment{
 			Name:    strategy.Name,
 			Network: strategy.Network,
-			Params:  strategy.Params,
+			Params:  params,
 		})
 	}
 

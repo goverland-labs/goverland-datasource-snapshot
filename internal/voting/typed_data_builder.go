@@ -96,7 +96,7 @@ func NewTypedSignDataBuilder() *TypedSignDataBuilder {
 }
 
 // Build Now handle only 0x... proposal format
-func (t *TypedSignDataBuilder) Build(prepareParams *PrepareParams, pFragment *client.ProposalFragment) TypedData {
+func (t *TypedSignDataBuilder) Build(prepareParams PrepareParams, pFragment *client.ProposalFragment) TypedData {
 	isShutter := pFragment.Privacy != nil && *pFragment.Privacy == shutterPrivacy
 
 	types := VoteNumberTypes

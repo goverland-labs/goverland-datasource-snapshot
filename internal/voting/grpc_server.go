@@ -16,7 +16,9 @@ type GrpcServer struct {
 }
 
 func NewGrpcServer(actionService *ActionService) *GrpcServer {
-	return &GrpcServer{}
+	return &GrpcServer{
+		actionService: actionService,
+	}
 }
 
 func (g *GrpcServer) Validate(ctx context.Context, req *votingpb.ValidateRequest) (*votingpb.ValidateResponse, error) {
@@ -27,7 +29,7 @@ func (g *GrpcServer) Validate(ctx context.Context, req *votingpb.ValidateRequest
 		return nil, status.Errorf(codes.InvalidArgument, "proposal is required")
 	}
 
-	params := &ValidateParams{
+	params := ValidateParams{
 		Voter:    req.GetVoter(),
 		Proposal: req.GetProposal(),
 	}
@@ -60,7 +62,7 @@ func (g *GrpcServer) Prepare(ctx context.Context, req *votingpb.PrepareRequest) 
 		return nil, status.Errorf(codes.InvalidArgument, "proposal is required")
 	}
 
-	params := &PrepareParams{
+	params := PrepareParams{
 		Voter:    req.GetVoter(),
 		Proposal: req.GetProposal(),
 		Choice:   req.GetChoice().GetValue(),
