@@ -7,7 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.9] - 2023-11-15
+
 ### Changed
+- Decrease vote gap from 5 to 1 minutes
 - Actualize DB schema
 
 ## [0.2.8] - 2023-10-02

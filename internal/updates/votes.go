@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	votesCreatedAtGap = 5 * time.Minute
+	votesCreatedAtGap = 1 * time.Minute
 	votesPerRequest   = 1000
 	votePublishLimit  = 350
 	voteMaxOffset     = 5000
