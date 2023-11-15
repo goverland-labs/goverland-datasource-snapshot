@@ -44,6 +44,7 @@ type Application struct {
 	votesRepo    *db.VoteRepo
 	votesService *db.VoteService
 
+	preparedVotesRepo   *db.PreparedVoteRepo
 	actionVotingService *voting.ActionService
 
 	publisher *communicate.Publisher
@@ -121,13 +122,14 @@ func (a *Application) initDatabase() error {
 	}
 
 	// TODO: Use real migrations intead of auto migrations from gorm
-	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}); err != nil {
+	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}, &db.PreparedVote{}); err != nil {
 		return err
 	}
 
 	a.proposalsRepo = db.NewProposalRepo(conn)
 	a.spacesRepo = db.NewSpaceRepo(conn)
 	a.votesRepo = db.NewVoteRepo(conn)
+	a.preparedVotesRepo = db.NewPreparedVoteRepo(conn)
 
 	return err
 }
@@ -169,7 +171,7 @@ func (a *Application) initServices() error {
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
 
-	a.actionVotingService = voting.NewActionService(a.sdk, a.proposalsRepo, voting.NewTypedSignDataBuilder())
+	a.actionVotingService = voting.NewActionService(a.sdk, a.proposalsRepo, voting.NewTypedSignDataBuilder(), a.preparedVotesRepo)
 
 	return nil
 }

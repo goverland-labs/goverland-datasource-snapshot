@@ -2,9 +2,12 @@ package voting
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/goverland-labs/sdk-snapshot-go/client"
+
+	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
 )
 
 const (
@@ -23,9 +26,16 @@ type ProposalType string
 
 type TypedData struct {
 	Domain      Domain    `json:"domain"`
-	PrimaryType string    `json:"primaryType"`
+	PrimaryType string    `json:"primaryType,omitempty"`
 	VoteTypes   VoteTypes `json:"types"`
 	Vote        Vote      `json:"message"`
+}
+
+func (t TypedData) ForSnapshot() TypedData {
+	t.PrimaryType = ""
+	t.VoteTypes.EIP712Domain = nil
+
+	return t
 }
 
 type Domain struct {
@@ -36,12 +46,18 @@ type Domain struct {
 }
 
 type VoteTypes struct {
-	Vote []TypesDescription `json:"Vote"`
+	EIP712Domain []TypesDescription `json:"EIP712Domain,omitempty"`
+	Vote         []TypesDescription `json:"Vote"`
 }
 
 type TypesDescription struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+var EIP712Domain = []TypesDescription{
+	{Name: "name", Type: "string"},
+	{Name: "version", Type: "string"},
 }
 
 var VoteNumberTypes = []TypesDescription{
@@ -77,6 +93,39 @@ var VoteStringTypes = []TypesDescription{
 	{Name: "metadata", Type: "string"},
 }
 
+var VoteNumberTypes2 = []TypesDescription{
+	{Name: "from", Type: "address"},
+	{Name: "space", Type: "string"},
+	{Name: "timestamp", Type: "uint64"},
+	{Name: "proposal", Type: "bytes32"},
+	{Name: "choice", Type: "uint32"},
+	{Name: "reason", Type: "string"},
+	{Name: "app", Type: "string"},
+	{Name: "metadata", Type: "string"},
+}
+
+var VoteNumbersTypes2 = []TypesDescription{
+	{Name: "from", Type: "address"},
+	{Name: "space", Type: "string"},
+	{Name: "timestamp", Type: "uint64"},
+	{Name: "proposal", Type: "bytes32"},
+	{Name: "choice", Type: "uint32[]"},
+	{Name: "reason", Type: "string"},
+	{Name: "app", Type: "string"},
+	{Name: "metadata", Type: "string"},
+}
+
+var VoteStringTypes2 = []TypesDescription{
+	{Name: "from", Type: "address"},
+	{Name: "space", Type: "string"},
+	{Name: "timestamp", Type: "uint64"},
+	{Name: "proposal", Type: "bytes32"},
+	{Name: "choice", Type: "string"},
+	{Name: "reason", Type: "string"},
+	{Name: "app", Type: "string"},
+	{Name: "metadata", Type: "string"},
+}
+
 type Vote struct {
 	From      string          `json:"from"`
 	Space     string          `json:"space"`
@@ -96,40 +145,42 @@ func NewTypedSignDataBuilder() *TypedSignDataBuilder {
 }
 
 // Build Now handle only 0x... proposal format
-func (t *TypedSignDataBuilder) Build(prepareParams PrepareParams, pFragment *client.ProposalFragment) TypedData {
+func (t *TypedSignDataBuilder) Build(checksumVoter string, reason *string, choice json.RawMessage, pFragment *client.ProposalFragment) TypedData {
 	isShutter := pFragment.Privacy != nil && *pFragment.Privacy == shutterPrivacy
 
-	types := VoteNumberTypes
+	isTypes2 := strings.HasPrefix(pFragment.ID, "0x")
+
+	types := helpers.Ternary(isTypes2, VoteNumberTypes2, VoteNumberTypes)
 	if t.isProposalType(pFragment.Type, approvalProposalType, rankedChoiceProposalType) {
-		types = VoteNumbersTypes
+		types = helpers.Ternary(isTypes2, VoteNumbersTypes2, VoteNumbersTypes)
 	}
 	if isShutter || t.isProposalType(pFragment.Type, quadraticProposalType, weightedProposalType) {
-		types = VoteStringTypes
+		types = helpers.Ternary(isTypes2, VoteStringTypes2, VoteStringTypes)
 	}
 
-	reason := ""
-	if prepareParams.Reason != nil {
-		reason = *prepareParams.Reason
+	if reason == nil {
+		reason = helpers.Ptr("")
 	}
 
 	td := TypedData{
 		Domain: Domain{
-			Name:    app,
-			Version: "0.5", // TODO to config
+			Name:    "snapshot",
+			Version: "0.1.4", // TODO to config
 		},
 		PrimaryType: "Vote",
 		VoteTypes: VoteTypes{
-			Vote: types,
+			Vote:         types,
+			EIP712Domain: EIP712Domain,
 		},
 		Vote: Vote{
-			From:      prepareParams.Voter,
+			From:      checksumVoter,
 			Space:     pFragment.Space.ID,
 			Timestamp: time.Now().Unix(),
 			Proposal:  pFragment.ID,
-			Choice:    prepareParams.Choice,
-			Reason:    reason,
-			App:       app,
-			Metadata:  "",
+			Choice:    choice,
+			Reason:    *reason,
+			App:       "snapshot",
+			Metadata:  "{}",
 		},
 	}
 

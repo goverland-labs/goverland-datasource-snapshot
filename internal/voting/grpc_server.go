@@ -2,6 +2,7 @@ package voting
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,11 +22,11 @@ func NewGrpcServer(actionService *ActionService) *GrpcServer {
 	}
 }
 
-func (g *GrpcServer) Validate(ctx context.Context, req *votingpb.ValidateRequest) (*votingpb.ValidateResponse, error) {
-	if req.GetVoter() == "" {
+func (g *GrpcServer) Validate(_ context.Context, req *votingpb.ValidateRequest) (*votingpb.ValidateResponse, error) {
+	if strings.TrimSpace(req.GetVoter()) == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "voter is required")
 	}
-	if req.GetProposal() == "" {
+	if strings.TrimSpace(req.GetProposal()) == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "proposal is required")
 	}
 
@@ -54,11 +55,11 @@ func (g *GrpcServer) Validate(ctx context.Context, req *votingpb.ValidateRequest
 	}, nil
 }
 
-func (g *GrpcServer) Prepare(ctx context.Context, req *votingpb.PrepareRequest) (*votingpb.PrepareResponse, error) {
-	if req.GetVoter() == "" {
+func (g *GrpcServer) Prepare(_ context.Context, req *votingpb.PrepareRequest) (*votingpb.PrepareResponse, error) {
+	if strings.TrimSpace(req.GetVoter()) == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "voter is required")
 	}
-	if req.GetProposal() == "" {
+	if strings.TrimSpace(req.GetProposal()) == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "proposal is required")
 	}
 
@@ -75,10 +76,32 @@ func (g *GrpcServer) Prepare(ctx context.Context, req *votingpb.PrepareRequest) 
 	}
 
 	return &votingpb.PrepareResponse{
+		Id:        prepare.ID,
 		TypedData: prepare.TypedData,
 	}, nil
 }
 
-func (g *GrpcServer) Vote(ctx context.Context, req *votingpb.VoteRequest) (*votingpb.VoteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+func (g *GrpcServer) Vote(_ context.Context, req *votingpb.VoteRequest) (*votingpb.VoteResponse, error) {
+	if strings.TrimSpace(req.GetSig()) == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "sig is required")
+	}
+
+	params := VoteParams{
+		ID:  req.GetId(),
+		Sig: req.GetSig(),
+	}
+
+	voteResult, err := g.actionService.Vote(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &votingpb.VoteResponse{
+		Id:   voteResult.ID,
+		Ipfs: voteResult.IPFS,
+		Relayer: &votingpb.Relayer{
+			Address: voteResult.Relayer.Address,
+			Receipt: voteResult.Relayer.Receipt,
+		},
+	}, nil
 }

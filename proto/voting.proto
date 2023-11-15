@@ -37,15 +37,13 @@ message PrepareRequest {
 }
 
 message PrepareResponse {
-    string typed_data = 1;
+    uint64 id = 1;
+    string typed_data = 2;
 }
 
 message VoteRequest {
-    string voter = 1;
-    string proposal = 2;
-    google.protobuf.Any choice = 3;
-    optional string reason = 4;
-    string sig = 5;
+    uint64 id = 1;
+    string sig = 2;
 }
 
 message VoteResponse {
