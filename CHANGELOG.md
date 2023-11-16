@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.10] - 2023-11-16
+
+### Fixed
+- Fixed selecting active proposals for voting. It was stuck based on updated_at field
+
 ## [0.2.9] - 2023-11-15
 
 ### Changed

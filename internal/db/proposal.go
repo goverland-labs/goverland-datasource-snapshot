@@ -92,7 +92,7 @@ func (r *ProposalRepo) DeleteByID(id ...string) error {
 	return err
 }
 
-func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int) ([]string, error) {
+func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int, randOrder bool) ([]string, error) {
 	var (
 		dummy = Proposal{}
 		_     = dummy.UpdatedAt
@@ -104,6 +104,11 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int
 		ID string
 	}
 
+	orderBy := "updated_at asc"
+	if randOrder {
+		orderBy = "random()"
+	}
+
 	err := r.conn.Debug().Select("id").
 		Table("proposals").
 		Where("updated_at < ?", time.Now().Add(-interval)).
@@ -113,7 +118,7 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int
 				Where("to_timestamp((snapshot->'start')::double precision) <= now() and to_timestamp((snapshot->'end')::double precision) >= now()").
 				Or("updated_at < to_timestamp((snapshot->'end')::double precision) and to_timestamp((snapshot->'end')::double precision) < now()"),
 		).
-		Order("updated_at asc").
+		Order(orderBy).
 		Limit(limit).
 		Scan(&ids).
 		Error
@@ -271,8 +276,8 @@ func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error
 	})
 }
 
-func (s *ProposalService) GetProposalIDsForUpdate(interval time.Duration, limit int) ([]string, error) {
-	return s.repo.GetProposalIDsForUpdate(interval, limit)
+func (s *ProposalService) GetProposalIDsForUpdate(interval time.Duration, limit int, randOrder bool) ([]string, error) {
+	return s.repo.GetProposalIDsForUpdate(interval, limit, randOrder)
 }
 
 func (s *ProposalService) GetProposalForVotes(limit int) ([]string, error) {

@@ -51,7 +51,7 @@ func (w *ActiveProposalsWorker) Start(ctx context.Context) error {
 }
 
 func (w *ActiveProposalsWorker) loop(ctx context.Context) error {
-	ids, err := w.proposals.GetProposalIDsForUpdate(gap, proposalsPerRequest)
+	ids, err := w.proposals.GetProposalIDsForUpdate(gap, proposalsPerRequest, false)
 	if err != nil {
 		return err
 	}

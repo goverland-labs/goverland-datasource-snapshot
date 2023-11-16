@@ -388,17 +388,3 @@ func (c *Import) getOffset(args Arguments) (int64, error) {
 
 	return strconv.ParseInt(offset, 0, 64)
 }
-
-func (c *Import) getIs2faDisabled(args Arguments) bool {
-	val := args.Get("2fa")
-	if val == "" {
-		return false
-	}
-
-	is2faEnabled, err := strconv.ParseBool(val)
-	if err != nil {
-		return false
-	}
-
-	return is2faEnabled
-}

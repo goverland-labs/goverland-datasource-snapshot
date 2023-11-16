@@ -153,7 +153,7 @@ func (w *VoteWorker) loop(ctx context.Context) error {
 }
 
 func (w *VoteWorker) loopActive(ctx context.Context) error {
-	ids, err := w.proposals.GetProposalIDsForUpdate(gap, proposalsPerRequest)
+	ids, err := w.proposals.GetProposalIDsForUpdate(gap, proposalsPerRequest, true)
 	if err != nil {
 		return fmt.Errorf("get proposals for votes: %w", err)
 	}
