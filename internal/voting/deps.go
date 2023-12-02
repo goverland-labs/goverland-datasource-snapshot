@@ -3,6 +3,7 @@ package voting
 import (
 	"context"
 
+	"github.com/goverland-labs/sdk-snapshot-go/client"
 	"github.com/goverland-labs/sdk-snapshot-go/snapshot"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/db"
@@ -14,7 +15,7 @@ type proposalGetter interface {
 
 type snapshotSDK interface {
 	Validate(_ context.Context, params snapshot.ValidationParams) (snapshot.ValidationResponse, error)
-	GetVotingPower(_ context.Context, params snapshot.GetVotingPowerParams) (snapshot.GetVotingPowerResponse, error)
+	GetVotingPower(_ context.Context, params snapshot.GetVotingPowerParams) (*client.VotingPowerFragment, error)
 	Vote(_ context.Context, params snapshot.VoteParams) (snapshot.VoteResult, error)
 }
 

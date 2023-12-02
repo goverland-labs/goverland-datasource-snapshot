@@ -11,7 +11,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/platform-events v0.1.7
-	github.com/goverland-labs/sdk-snapshot-go v0.3.2-0.20231109190135-b66c4af62f44
+	github.com/goverland-labs/sdk-snapshot-go v0.3.2-0.20231202130756-456ad035ece0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/nats-io/nats.go v1.27.1

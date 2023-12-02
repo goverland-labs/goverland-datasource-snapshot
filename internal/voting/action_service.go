@@ -130,12 +130,9 @@ func (a *ActionService) Vote(voteParams VoteParams) (SuccessVote, error) {
 func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFragment *client.ProposalFragment) (validateVPResult, error) {
 	snapshotNum := getSnapshot(pFragment.Snapshot)
 	params := snapshot.GetVotingPowerParams{
-		Address:    validateParams.Voter,
-		Network:    pFragment.Network,
-		Strategies: convertStrategies(pFragment.Strategies),
-		Snapshot:   snapshotNum,
-		Space:      pFragment.Space.ID,
-		Delegation: false, // TODO: add delegation
+		Voter:    validateParams.Voter,
+		Space:    pFragment.Space.ID,
+		Proposal: pFragment.ID,
 	}
 
 	votingPowerResp, err := a.snapshotSDK.GetVotingPower(context.Background(), params)
@@ -143,7 +140,8 @@ func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFrag
 		return validateVPResult{}, err
 	}
 
-	if votingPowerResp.Result.VP == 0 {
+	vpValue := votingPowerResp.GetVp()
+	if vpValue != nil && *vpValue == 0 {
 		return validateVPResult{
 			validation: validation{
 				ok:              false,
@@ -156,7 +154,7 @@ func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFrag
 		validation: validation{
 			ok: true,
 		},
-		votingPower: votingPowerResp.Result.VP,
+		votingPower: *vpValue,
 	}, nil
 }
 
