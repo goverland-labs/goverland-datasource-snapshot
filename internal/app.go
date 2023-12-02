@@ -171,7 +171,7 @@ func (a *Application) initServices() error {
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
 
-	a.actionVotingService = voting.NewActionService(a.sdk, a.proposalsRepo, voting.NewTypedSignDataBuilder(), a.preparedVotesRepo)
+	a.actionVotingService = voting.NewActionService(a.sdk, a.proposalsRepo, voting.NewTypedSignDataBuilder(a.cfg.Snapshot), a.preparedVotesRepo)
 
 	return nil
 }
