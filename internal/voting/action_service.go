@@ -75,7 +75,10 @@ func (a *ActionService) Prepare(prepareParams PrepareParams) (db.PreparedVote, e
 	}
 
 	checksumVoter := common.HexToAddress(prepareParams.Voter).Hex()
-	typedData := a.typedSignDataBuilder.Build(checksumVoter, prepareParams.Reason, prepareParams.Choice, &pFragment)
+	typedData, err := a.typedSignDataBuilder.Build(checksumVoter, prepareParams.Reason, prepareParams.Choice, &pFragment)
+	if err != nil {
+		return db.PreparedVote{}, fmt.Errorf("failed to build typed data: %w", err)
+	}
 	typedDataJSON, err := json.Marshal(typedData)
 	if err != nil {
 		return db.PreparedVote{}, fmt.Errorf("failed to marshal typed data: %w", err)
