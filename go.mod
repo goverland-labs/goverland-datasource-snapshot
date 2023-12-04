@@ -1,8 +1,6 @@
 module github.com/goverland-labs/datasource-snapshot
 
-go 1.21
-
-toolchain go1.21.1
+go 1.20
 
 require (
 	github.com/Yamashou/gqlgenc v0.14.0

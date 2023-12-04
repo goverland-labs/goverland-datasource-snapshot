@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed docker build
+
 ## [0.3.0] - 2023-12-04
 
 ### Added
