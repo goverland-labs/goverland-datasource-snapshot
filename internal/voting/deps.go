@@ -3,6 +3,7 @@ package voting
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/goverland-labs/sdk-snapshot-go/client"
 	"github.com/goverland-labs/sdk-snapshot-go/snapshot"
 
@@ -21,5 +22,5 @@ type snapshotSDK interface {
 
 type preparedVoteStorage interface {
 	Create(vote *db.PreparedVote) error
-	Get(id uint64) (db.PreparedVote, error)
+	Get(id uuid.UUID) (db.PreparedVote, error)
 }

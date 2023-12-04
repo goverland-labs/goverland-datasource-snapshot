@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -76,7 +77,7 @@ func (g *GrpcServer) Prepare(_ context.Context, req *votingpb.PrepareRequest) (*
 	}
 
 	return &votingpb.PrepareResponse{
-		Id:        prepare.ID,
+		Id:        prepare.ID.String(),
 		TypedData: prepare.TypedData,
 	}, nil
 }
@@ -86,8 +87,13 @@ func (g *GrpcServer) Vote(_ context.Context, req *votingpb.VoteRequest) (*voting
 		return nil, status.Errorf(codes.InvalidArgument, "sig is required")
 	}
 
+	prepareID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid id")
+	}
+
 	params := VoteParams{
-		ID:  req.GetId(),
+		ID:  prepareID,
 		Sig: req.GetSig(),
 	}
 

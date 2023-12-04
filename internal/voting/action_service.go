@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/sdk-snapshot-go/client"
@@ -85,6 +86,7 @@ func (a *ActionService) Prepare(prepareParams PrepareParams) (db.PreparedVote, e
 	}
 
 	preparedVote := db.PreparedVote{
+		ID:        uuid.New(),
 		Voter:     checksumVoter,
 		Proposal:  pFragment.ID,
 		TypedData: string(typedDataJSON),

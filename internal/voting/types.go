@@ -1,6 +1,10 @@
 package voting
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/google/uuid"
+)
 
 type ValidateParams struct {
 	Voter    string
@@ -27,7 +31,7 @@ type PrepareParams struct {
 }
 
 type VoteParams struct {
-	ID  uint64
+	ID  uuid.UUID
 	Sig string
 }
 

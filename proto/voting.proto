@@ -37,12 +37,12 @@ message PrepareRequest {
 }
 
 message PrepareResponse {
-    uint64 id = 1;
+    string id = 1;
     string typed_data = 2;
 }
 
 message VoteRequest {
-    uint64 id = 1;
+    string id = 1;
     string sig = 2;
 }
 
