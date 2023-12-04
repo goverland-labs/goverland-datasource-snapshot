@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/goverland-labs/platform-events/events/aggregator"
-	"github.com/goverland-labs/sdk-snapshot-go/client"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"github.com/goverland-labs/sdk-snapshot-go/client"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
 	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
@@ -73,6 +74,22 @@ func (r *ProposalRepo) GetLatestProposal() (*Proposal, error) {
 
 	err := r.conn.
 		Order("created_at DESC").
+		First(&p).
+		Error
+
+	return &p, err
+}
+
+func (r *ProposalRepo) GetByID(id string) (*Proposal, error) {
+	var (
+		dummy = Proposal{}
+		_     = dummy.ID
+	)
+
+	var p Proposal
+
+	err := r.conn.
+		Where("id = ?", id).
 		First(&p).
 		Error
 

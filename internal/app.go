@@ -6,18 +6,28 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/goverland-labs/sdk-snapshot-go/snapshot"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	grcpprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/nats-io/nats.go"
+	grpczerolog "github.com/pereslava/grpc_zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/s-larionov/process-manager"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/goverland-labs/sdk-snapshot-go/snapshot"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/config"
 	"github.com/goverland-labs/datasource-snapshot/internal/db"
 	"github.com/goverland-labs/datasource-snapshot/internal/updates"
+	"github.com/goverland-labs/datasource-snapshot/internal/voting"
 	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
+	"github.com/goverland-labs/datasource-snapshot/pkg/grpcsrv"
 	"github.com/goverland-labs/datasource-snapshot/pkg/health"
 	"github.com/goverland-labs/datasource-snapshot/pkg/prometheus"
+	"github.com/goverland-labs/datasource-snapshot/proto/votingpb"
 )
 
 type Application struct {
@@ -33,6 +43,9 @@ type Application struct {
 
 	votesRepo    *db.VoteRepo
 	votesService *db.VoteService
+
+	preparedVotesRepo   *db.PreparedVoteRepo
+	actionVotingService *voting.ActionService
 
 	publisher *communicate.Publisher
 
@@ -71,6 +84,7 @@ func (a *Application) bootstrap() error {
 		a.initNats,
 		a.initSnapshot,
 		a.initServices,
+		a.initGrpc,
 	}
 
 	if !a.isCliMode {
@@ -108,13 +122,14 @@ func (a *Application) initDatabase() error {
 	}
 
 	// TODO: Use real migrations intead of auto migrations from gorm
-	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}); err != nil {
+	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}, &db.PreparedVote{}); err != nil {
 		return err
 	}
 
 	a.proposalsRepo = db.NewProposalRepo(conn)
 	a.spacesRepo = db.NewSpaceRepo(conn)
 	a.votesRepo = db.NewVoteRepo(conn)
+	a.preparedVotesRepo = db.NewPreparedVoteRepo(conn)
 
 	return err
 }
@@ -155,6 +170,32 @@ func (a *Application) initServices() error {
 	a.proposalsService = db.NewProposalService(a.proposalsRepo, a.publisher)
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
+
+	a.actionVotingService = voting.NewActionService(a.sdk, a.proposalsRepo, voting.NewTypedSignDataBuilder(a.cfg.Snapshot), a.preparedVotesRepo)
+
+	return nil
+}
+
+func (a *Application) initGrpc() error {
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			grcpprometheus.UnaryServerInterceptor,
+			grpczerolog.NewUnaryServerInterceptor(log.Logger),
+			grpcrecovery.UnaryServerInterceptor(),
+		),
+		grpc.ChainStreamInterceptor(
+			grcpprometheus.StreamServerInterceptor,
+			grpczerolog.NewStreamServerInterceptor(log.Logger),
+			grpcrecovery.StreamServerInterceptor(),
+		),
+	)
+	reflection.Register(grpcServer)
+
+	votingGrpc := voting.NewGrpcServer(a.actionVotingService)
+	votingpb.RegisterVotingServer(grpcServer, votingGrpc)
+
+	grpcWorker := grpcsrv.NewGrpcServerWorker("snapshot", grpcServer, a.cfg.InternalAPI.Bind)
+	a.manager.AddWorker(grpcWorker)
 
 	return nil
 }
