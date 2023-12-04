@@ -46,8 +46,8 @@ func (t TypedData) ForSnapshot() TypedData {
 type Domain struct {
 	Name              string  `json:"name"`
 	Version           string  `json:"version"`
-	ChainId           *int    `json:"chainId,omitempty"`           // TODO
-	VerifyingContract *string `json:"verifyingContract,omitempty"` // TODO
+	ChainId           *int    `json:"chainId,omitempty"`           // TODO do we need it?
+	VerifyingContract *string `json:"verifyingContract,omitempty"` // TODO do we need it?
 }
 
 type VoteTypes struct {
