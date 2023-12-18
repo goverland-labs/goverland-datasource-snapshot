@@ -9,11 +9,11 @@ require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/platform-events v0.1.8
+	github.com/goverland-labs/platform-events v0.1.12-0.20231218152005-9154aaeac858
 	github.com/goverland-labs/sdk-snapshot-go v0.3.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/nats-io/nats.go v1.27.1
+	github.com/nats-io/nats.go v1.30.2
 	github.com/pereslava/grpc_zerolog v0.0.3
 	github.com/prometheus/client_golang v1.16.0
 	github.com/rs/zerolog v1.29.1
@@ -40,11 +40,11 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/nats-io/nkeys v0.4.4 // indirect
+	github.com/nats-io/nkeys v0.4.5 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
