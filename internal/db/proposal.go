@@ -305,6 +305,7 @@ func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error
 		ScoresTotal:   float32(helpers.ZeroIfNil(unmarshaled.ScoresTotal)),
 		ScoresUpdated: int(helpers.ZeroIfNil(unmarshaled.ScoresUpdated)),
 		Votes:         int(helpers.ZeroIfNil(unmarshaled.Votes)),
+		Flagged:       helpers.ZeroIfNil(unmarshaled.Flagged),
 	})
 }
 
