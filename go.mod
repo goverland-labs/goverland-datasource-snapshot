@@ -9,7 +9,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/platform-events v0.1.12-0.20231218152005-9154aaeac858
+	github.com/goverland-labs/platform-events v0.1.12
 	github.com/goverland-labs/sdk-snapshot-go v0.3.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
