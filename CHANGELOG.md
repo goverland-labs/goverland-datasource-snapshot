@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Changed app name from snapshot to goverland
+
 ## [0.3.2] - 2023-12-20
 
 ### Added

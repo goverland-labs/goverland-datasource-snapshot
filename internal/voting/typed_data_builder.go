@@ -195,7 +195,7 @@ func (t *TypedSignDataBuilder) Build(checksumVoter string, reason *string, choic
 			Proposal:  pFragment.ID,
 			Choice:    choice,
 			Reason:    *reason,
-			App:       "snapshot",
+			App:       "goverland",
 			Metadata:  "{}",
 		},
 	}
