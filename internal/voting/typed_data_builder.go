@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/goverland-labs/sdk-snapshot-go/client"
+	"github.com/rs/zerolog/log"
 	"github.com/shutter-network/shutter/shlib/shcrypto"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/config"
@@ -170,7 +171,12 @@ func (t *TypedSignDataBuilder) Build(checksumVoter string, reason *string, choic
 	}
 
 	if isShutter {
-		choiceStr, err := t.encodeShutterChoice(string(choice), pFragment.ID)
+		choiceForShutter, err := t.getChoiceForShutter(string(choice), pFragment)
+		if err != nil {
+			return TypedData{}, fmt.Errorf("failed to get choice for shutter: %w", err)
+		}
+
+		choiceStr, err := t.encodeShutterChoice(choiceForShutter, pFragment.ID)
 		if err != nil {
 			return TypedData{}, fmt.Errorf("failed to encode choice: %w", err)
 		}
@@ -201,6 +207,24 @@ func (t *TypedSignDataBuilder) Build(checksumVoter string, reason *string, choic
 	}
 
 	return td, nil
+}
+
+func (t *TypedSignDataBuilder) getChoiceForShutter(choice string, pFragment *client.ProposalFragment) (string, error) {
+	if !t.isProposalType(pFragment.Type, quadraticProposalType, weightedProposalType) {
+		return choice, nil
+	}
+
+	var choiceForShutter string
+	if err := json.Unmarshal([]byte(choice), &choiceForShutter); err != nil {
+		return "", fmt.Errorf("failed to convert choice %s for shutter: %w", choice, err)
+	}
+
+	log.Info().
+		Str("choice", choice).
+		Str("choiceForShutter", choiceForShutter).
+		Msg("get choice for string shutter")
+
+	return choiceForShutter, nil
 }
 
 func (t *TypedSignDataBuilder) encodeShutterChoice(choice string, proposalID string) (string, error) {
