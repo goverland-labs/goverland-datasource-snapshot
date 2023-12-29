@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.4] - 2023-12-29
+
 ### Fixed
 - Fixed shutter voting for quadratic and ranked voting
 
