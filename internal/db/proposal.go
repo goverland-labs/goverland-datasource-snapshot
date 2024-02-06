@@ -40,12 +40,15 @@ func NewProposalRepo(conn *gorm.DB) *ProposalRepo {
 }
 
 func (r *ProposalRepo) Upsert(p *Proposal) (isNew bool, err error) {
-	var existed *Proposal
+	var existed Proposal
 	err = r.conn.
 		Select("id").
 		Where(Proposal{ID: p.ID}).
-		First(existed).
+		First(&existed).
 		Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, err
+	}
 
 	isNew = errors.Is(err, gorm.ErrRecordNotFound)
 

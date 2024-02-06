@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed proposal creation event
+
 ## [0.3.4] - 2023-12-29
 
 ### Fixed
