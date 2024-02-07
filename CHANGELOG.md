@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.6] - 2024-02-07
+
+### Added
+- Verified field mapping
+
 ## [0.3.5] - 2024-02-06
 
 ### Fixed

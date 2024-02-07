@@ -147,6 +147,7 @@ func (s *SpaceService) publishEvent(space *Space) error {
 		Template:       helpers.ZeroIfNil(unmarshaled.Template),
 		Strategies:     strategies,
 		Treasures:      treasuries,
+		Verified:       helpers.ZeroIfNil(unmarshaled.Verified),
 	})
 }
 
