@@ -49,7 +49,8 @@ type Application struct {
 
 	publisher *communicate.Publisher
 
-	sdk *snapshot.SDK
+	sdk       *snapshot.SDK
+	votingSDK *snapshot.SDK
 
 	isCliMode bool
 }
@@ -163,6 +164,12 @@ func (a *Application) initSnapshot() error {
 
 	a.sdk = snapshot.NewSDK(opts...)
 
+	var votingOpts []snapshot.Option
+	if a.cfg.Snapshot.VotingAPIKey != "" {
+		votingOpts = append(votingOpts, snapshot.WithApiKey(a.cfg.Snapshot.VotingAPIKey))
+	}
+	a.votingSDK = snapshot.NewSDK(votingOpts...)
+
 	return nil
 }
 
@@ -171,7 +178,7 @@ func (a *Application) initServices() error {
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
 
-	a.actionVotingService = voting.NewActionService(a.sdk, a.proposalsRepo, voting.NewTypedSignDataBuilder(a.cfg.Snapshot), a.preparedVotesRepo)
+	a.actionVotingService = voting.NewActionService(a.votingSDK, a.proposalsRepo, voting.NewTypedSignDataBuilder(a.cfg.Snapshot), a.preparedVotesRepo)
 
 	return nil
 }

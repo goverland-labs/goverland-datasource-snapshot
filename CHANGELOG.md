@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added different api key for voting requests
+
 ## [0.3.6] - 2024-02-07
 
 ### Added
