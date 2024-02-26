@@ -4,14 +4,19 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	RequestsHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "snapshot_sdk_requests",
-		Help:    "Time taken to process snapshot requests",
-		Buckets: []float64{20, 50, 100, 500},
-	}, []string{"client", "method", "error"})
+	RequestsHistogram = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "datasource",
+			Name:      "snapshot_sdk_requests",
+			Help:      "Time taken to process snapshot requests",
+			Buckets:   []float64{20, 50, 100, 500},
+		},
+		[]string{"client", "method", "error"},
+	)
 )
 
 func CollectRequestsMetric(client, method string, err error, start time.Time) {
