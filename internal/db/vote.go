@@ -11,8 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-
-	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
 )
 
 type Vote struct {
@@ -107,10 +105,10 @@ func (r *VoteRepo) MarkAsPublished(votes []Vote) error {
 
 type VoteService struct {
 	repo      *VoteRepo
-	publisher *communicate.Publisher
+	publisher Publisher
 }
 
-func NewVoteService(repo *VoteRepo, publisher *communicate.Publisher) *VoteService {
+func NewVoteService(repo *VoteRepo, publisher Publisher) *VoteService {
 	return &VoteService{
 		repo:      repo,
 		publisher: publisher,

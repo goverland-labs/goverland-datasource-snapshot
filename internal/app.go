@@ -1,11 +1,15 @@
 package internal
 
 import (
+	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/Yamashou/gqlgenc/clientv2"
+	"github.com/goverland-labs/platform-events/pkg/natsclient"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	grcpprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/nats-io/nats.go"
@@ -21,9 +25,9 @@ import (
 
 	"github.com/goverland-labs/datasource-snapshot/internal/config"
 	"github.com/goverland-labs/datasource-snapshot/internal/db"
+	"github.com/goverland-labs/datasource-snapshot/internal/metrics"
 	"github.com/goverland-labs/datasource-snapshot/internal/updates"
 	"github.com/goverland-labs/datasource-snapshot/internal/voting"
-	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
 	"github.com/goverland-labs/datasource-snapshot/pkg/grpcsrv"
 	"github.com/goverland-labs/datasource-snapshot/pkg/health"
 	"github.com/goverland-labs/datasource-snapshot/pkg/prometheus"
@@ -47,7 +51,7 @@ type Application struct {
 	preparedVotesRepo   *db.PreparedVoteRepo
 	actionVotingService *voting.ActionService
 
-	publisher *communicate.Publisher
+	publisher *natsclient.Publisher
 
 	sdk       *snapshot.SDK
 	votingSDK *snapshot.SDK
@@ -146,7 +150,7 @@ func (a *Application) initNats() error {
 		return err
 	}
 
-	publisher, err := communicate.NewPublisher(nc)
+	publisher, err := natsclient.NewPublisher(nc)
 	if err != nil {
 		return err
 	}
@@ -157,14 +161,32 @@ func (a *Application) initNats() error {
 }
 
 func (a *Application) initSnapshot() error {
-	var opts []snapshot.Option
+	metricsMiddleware := func(name string) clientv2.RequestInterceptor {
+		return func(ctx context.Context, req *http.Request, gqlInfo *clientv2.GQLRequestInfo, res interface{}, next clientv2.RequestInterceptorFunc) (err error) {
+			defer func(start time.Time) {
+				metrics.CollectRequestsMetric(name, gqlInfo.Request.OperationName, err, start)
+			}(time.Now())
+
+			return next(ctx, req, gqlInfo, res)
+		}
+	}
+
+	opts := []snapshot.Option{
+		snapshot.WithInterceptors([]clientv2.RequestInterceptor{
+			metricsMiddleware("general"),
+		}),
+	}
 	if a.cfg.Snapshot.APIKey != "" {
 		opts = append(opts, snapshot.WithApiKey(a.cfg.Snapshot.APIKey))
 	}
 
 	a.sdk = snapshot.NewSDK(opts...)
 
-	var votingOpts []snapshot.Option
+	votingOpts := []snapshot.Option{
+		snapshot.WithInterceptors([]clientv2.RequestInterceptor{
+			metricsMiddleware("voting"),
+		}),
+	}
 	if a.cfg.Snapshot.VotingAPIKey != "" {
 		votingOpts = append(votingOpts, snapshot.WithApiKey(a.cfg.Snapshot.VotingAPIKey))
 	}
