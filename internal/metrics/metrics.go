@@ -13,7 +13,7 @@ var (
 			Namespace: "datasource",
 			Name:      "snapshot_sdk_requests",
 			Help:      "Time taken to process snapshot requests",
-			Buckets:   []float64{20, 50, 100, 500},
+			Buckets:   []float64{.005, .01, .025, .05, .075, .1, .15, .2, .25, .5, 1, 2.5, 5, 10, 15, 30},
 		},
 		[]string{"client", "method", "error"},
 	)
