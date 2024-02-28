@@ -61,8 +61,8 @@ github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25d
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
-github.com/goverland-labs/platform-events v0.1.16-0.20240227122936-92ad2f5133e5 h1:IinGz/tYyV2ptnc7AdKNct9lGzjyxmXrojAy49Z2lUc=
-github.com/goverland-labs/platform-events v0.1.16-0.20240227122936-92ad2f5133e5/go.mod h1:NougpMOOzFCkaT86olp7Lm595wT9fBdCOUkCbYfekO4=
+github.com/goverland-labs/platform-events v0.1.16 h1:XrS8+otnOEGCzRoAY1qG5cK4XeROaT4H8TjbRjBt1KQ=
+github.com/goverland-labs/platform-events v0.1.16/go.mod h1:NougpMOOzFCkaT86olp7Lm595wT9fBdCOUkCbYfekO4=
 github.com/goverland-labs/sdk-snapshot-go v0.3.2 h1:pcRxJ4i2CWtFZTMZ/r7DdyghIY0wT8BfgLYKng5OlEU=
 github.com/goverland-labs/sdk-snapshot-go v0.3.2/go.mod h1:CL4oTVoc/PqpjCQvIi9s63qtNVGlK/icil8uDkqwGJw=
 github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 h1:HcUWd006luQPljE73d5sk+/VgYPGUReEVz2y1/qylwY=
