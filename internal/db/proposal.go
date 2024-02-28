@@ -15,7 +15,6 @@ import (
 	"github.com/goverland-labs/sdk-snapshot-go/client"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
-	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
 )
 
 type Proposal struct {
@@ -207,10 +206,10 @@ func (r *ProposalRepo) MarkVotesProcessed(id string) error {
 
 type ProposalService struct {
 	repo      *ProposalRepo
-	publisher *communicate.Publisher
+	publisher Publisher
 }
 
-func NewProposalService(repo *ProposalRepo, publisher *communicate.Publisher) *ProposalService {
+func NewProposalService(repo *ProposalRepo, publisher Publisher) *ProposalService {
 	return &ProposalService{
 		repo:      repo,
 		publisher: publisher,

@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
-	"github.com/goverland-labs/datasource-snapshot/pkg/communicate"
 )
 
 type Space struct {
@@ -69,10 +68,10 @@ func (r *SpaceRepo) FindUndefinedSpaceIDs(limit int) ([]string, error) {
 
 type SpaceService struct {
 	repo      *SpaceRepo
-	publisher *communicate.Publisher
+	publisher Publisher
 }
 
-func NewSpaceService(repo *SpaceRepo, publisher *communicate.Publisher) *SpaceService {
+func NewSpaceService(repo *SpaceRepo, publisher Publisher) *SpaceService {
 	return &SpaceService{
 		repo:      repo,
 		publisher: publisher,
