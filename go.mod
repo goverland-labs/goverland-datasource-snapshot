@@ -9,6 +9,7 @@ require (
 	github.com/akamensky/argparse v1.4.0
 	github.com/caarlos0/env/v8 v8.0.0
 	github.com/ethereum/go-ethereum v1.13.14
+	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-datasource-snapshot/protocol v0.0.0
@@ -34,7 +35,6 @@ require (
 	github.com/99designs/gqlgen v0.17.33 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/holiman/uint256 v1.2.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

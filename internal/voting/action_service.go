@@ -9,12 +9,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
-
+	"github.com/goverland-labs/platform-events/events/aggregator"
 	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
+	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
+	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
 )
 
 const (
@@ -127,6 +128,48 @@ func (a *ActionService) Vote(voteParams VoteParams) (SuccessVote, error) {
 			Receipt: voteResult.Relayer.Receipt,
 		},
 	}, nil
+}
+
+// GetVote TODO think about DTO
+func (a *ActionService) GetVote(id string) (aggregator.VotePayload, error) {
+	voteByID, err := a.snapshotSDK.VoteByID(context.Background(), id)
+	if err != nil {
+		return aggregator.VotePayload{}, fmt.Errorf("failed to get vote by id: %w", err)
+	}
+
+	var daoID string
+	if voteByID.Space != nil {
+		daoID = voteByID.Space.ID
+	}
+
+	var proposalID string
+	if voteByID.Proposal != nil {
+		proposalID = voteByID.Proposal.ID
+	}
+
+	return aggregator.VotePayload{
+		ID:            voteByID.ID,
+		Ipfs:          helpers.ValurOrDefault(voteByID.Ipfs, ""),
+		Voter:         voteByID.Voter,
+		Created:       int(voteByID.Created),
+		OriginalDaoID: daoID,
+		ProposalID:    proposalID,
+		Choice:        voteByID.Choice,
+		Reason:        helpers.ValurOrDefault(voteByID.Reason, ""),
+		App:           helpers.ValurOrDefault(voteByID.App, ""),
+		Vp:            helpers.ValurOrDefault(voteByID.Vp, 0),
+		VpByStrategy:  convertVpByStrategy(voteByID.VpByStrategy),
+		VpState:       helpers.ValurOrDefault(voteByID.VpState, ""),
+	}, nil
+}
+
+func convertVpByStrategy(data []*float64) []float64 {
+	res := make([]float64, len(data))
+	for i := range data {
+		res[i] = *data[i]
+	}
+
+	return res
 }
 
 func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFragment *client.ProposalFragment) (validateVPResult, error) {

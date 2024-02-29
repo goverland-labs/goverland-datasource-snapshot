@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	protoany "github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -109,5 +110,33 @@ func (g *GrpcServer) Vote(_ context.Context, req *votingpb.VoteRequest) (*voting
 			Address: voteResult.Relayer.Address,
 			Receipt: voteResult.Relayer.Receipt,
 		},
+	}, nil
+}
+
+func (g *GrpcServer) GetVote(ctx context.Context, req *votingpb.GetVoteRequest) (*votingpb.GetVoteResponse, error) {
+	if strings.TrimSpace(req.GetId()) == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "id is required")
+	}
+
+	voteResult, err := g.actionService.GetVote(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &votingpb.GetVoteResponse{
+		Id:            voteResult.ID,
+		Ipfs:          voteResult.Ipfs,
+		Voter:         voteResult.Voter,
+		Created:       int64(voteResult.Created),
+		OriginalDaoId: voteResult.OriginalDaoID,
+		ProposalId:    voteResult.ProposalID,
+		Choice: &protoany.Any{
+			Value: voteResult.Choice,
+		},
+		Reason:       voteResult.Reason,
+		App:          voteResult.App,
+		Vp:           voteResult.Vp,
+		VpByStrategy: voteResult.VpByStrategy,
+		VpState:      voteResult.VpState,
 	}, nil
 }

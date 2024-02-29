@@ -10,6 +10,7 @@ service Voting {
     rpc Validate(ValidateRequest) returns (ValidateResponse);
     rpc Prepare(PrepareRequest) returns (PrepareResponse);
     rpc Vote(VoteRequest) returns (VoteResponse);
+    rpc GetVote(GetVoteRequest) returns (GetVoteResponse);
 }
 
 message ValidateRequest {
@@ -55,4 +56,23 @@ message VoteResponse {
 message Relayer {
     string address = 1;
     string receipt = 2;
+}
+
+message GetVoteRequest {
+    string id = 1;
+}
+
+message GetVoteResponse {
+    string id = 1;
+    string ipfs = 2;
+    string voter = 3;
+    int64 created = 4;
+    string original_dao_id = 5;
+    string proposal_id = 6;
+    google.protobuf.Any choice = 7;
+    string reason = 8;
+    string app = 9;
+    double vp = 10;
+    repeated double vp_by_strategy = 11;
+    string vp_state = 12;
 }
