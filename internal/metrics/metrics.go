@@ -17,12 +17,26 @@ var (
 		},
 		[]string{"client", "method", "error"},
 	)
+
+	SnapshotKeyStateGauge = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "datasource",
+			Name:      "snapshot_key_state",
+			Help:      "Stores the last received number of remaining requests",
+		}, []string{"key", "name"},
+	)
 )
 
 func CollectRequestsMetric(client, method string, err error, start time.Time) {
 	RequestsHistogram.
 		WithLabelValues(client, method, errLabelValue(err)).
 		Observe(time.Since(start).Seconds())
+}
+
+func CollectSnapshotKeyState(key, name string, val float64) {
+	SnapshotKeyStateGauge.
+		WithLabelValues(key, name).
+		Set(val)
 }
 
 // ErrLabelValue returns string representation of error label value
