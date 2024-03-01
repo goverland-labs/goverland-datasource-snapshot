@@ -1,6 +1,6 @@
 .idea/
 .DS_Store
 /.env
-/bin/*
+/protocol/bin/*
 /goverland-datasource-snapshot
 /cmd.local
