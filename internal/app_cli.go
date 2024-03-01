@@ -11,8 +11,8 @@ import (
 
 	"github.com/s-larionov/process-manager"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/cli"
-	"github.com/goverland-labs/datasource-snapshot/internal/config"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/cli"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
 )
 
 var (

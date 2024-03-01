@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Yamashou/gqlgenc/clientv2"
-	"github.com/goverland-labs/platform-events/pkg/natsclient"
+	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	grcpprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/nats-io/nats.go"
@@ -21,17 +21,17 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/goverland-labs/sdk-snapshot-go/snapshot"
+	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/config"
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
-	"github.com/goverland-labs/datasource-snapshot/internal/metrics"
-	"github.com/goverland-labs/datasource-snapshot/internal/updates"
-	"github.com/goverland-labs/datasource-snapshot/internal/voting"
-	"github.com/goverland-labs/datasource-snapshot/pkg/grpcsrv"
-	"github.com/goverland-labs/datasource-snapshot/pkg/health"
-	"github.com/goverland-labs/datasource-snapshot/pkg/prometheus"
-	"github.com/goverland-labs/datasource-snapshot/proto/votingpb"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/metrics"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/voting"
+	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/grpcsrv"
+	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/health"
+	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/prometheus"
+	"github.com/goverland-labs/goverland-datasource-snapshot/proto/votingpb"
 )
 
 type Application struct {

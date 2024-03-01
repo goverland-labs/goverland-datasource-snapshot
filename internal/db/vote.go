@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/goverland-labs/platform-events/events/aggregator"
+	"github.com/goverland-labs/goverland-platform-events/events/aggregator"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

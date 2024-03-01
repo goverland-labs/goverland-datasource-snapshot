@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/goverland-labs/sdk-snapshot-go/client"
+	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
-	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
 
 const (
@@ -95,7 +95,7 @@ func (c *Import) Execute(args Arguments) error {
 			break
 		}
 		if err != nil {
-			fmt.Println(fmt.Sprintf("ERROR: %d: %s", idx, err.Error()))
+			fmt.Printf("ERROR: %d: %s\n", idx, err.Error())
 			break
 		}
 

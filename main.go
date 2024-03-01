@@ -5,9 +5,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/s-larionov/process-manager"
 
-	"github.com/goverland-labs/datasource-snapshot/internal"
-	"github.com/goverland-labs/datasource-snapshot/internal/config"
-	"github.com/goverland-labs/datasource-snapshot/internal/logger"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/logger"
 )
 
 var cfg config.App

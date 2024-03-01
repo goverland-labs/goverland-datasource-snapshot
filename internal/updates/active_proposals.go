@@ -6,11 +6,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/goverland-labs/sdk-snapshot-go/client"
-	"github.com/goverland-labs/sdk-snapshot-go/snapshot"
+	"github.com/goverland-labs/snapshot-sdk-go/client"
+	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
 
 const gap = 30 * time.Minute
