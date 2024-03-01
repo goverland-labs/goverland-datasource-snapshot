@@ -265,23 +265,6 @@ func getPassportGatedParams(fragment *client.ProposalFragment) (string, string, 
 	return operator, strings.Join(stamps, ", "), scoreThresholdResult
 }
 
-func convertStrategies(strategies []*client.StrategyFragment) []snapshot.StrategyFragment {
-	var result []snapshot.StrategyFragment
-	for _, strategy := range strategies {
-		params := make(map[string]interface{})
-		if strategy.Params != nil {
-			params = strategy.Params
-		}
-		result = append(result, snapshot.StrategyFragment{
-			Name:    strategy.Name,
-			Network: strategy.Network,
-			Params:  params,
-		})
-	}
-
-	return result
-}
-
 func getSnapshot(snapshot *string) any {
 	if snapshot == nil {
 		return latestSnapshot

@@ -95,7 +95,7 @@ func (c *Import) Execute(args Arguments) error {
 			break
 		}
 		if err != nil {
-			fmt.Println(fmt.Sprintf("ERROR: %d: %s", idx, err.Error()))
+			fmt.Printf("ERROR: %d: %s\n", idx, err.Error())
 			break
 		}
 
