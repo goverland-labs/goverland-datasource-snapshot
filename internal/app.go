@@ -31,7 +31,7 @@ import (
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/grpcsrv"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/health"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/prometheus"
-	"github.com/goverland-labs/goverland-datasource-snapshot/proto/votingpb"
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
 )
 
 type Application struct {
