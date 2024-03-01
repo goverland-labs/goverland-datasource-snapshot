@@ -1,6 +1,6 @@
 module github.com/goverland-labs/datasource-snapshot
 
-go 1.20
+go 1.21
 
 require (
 	github.com/Yamashou/gqlgenc v0.14.0
@@ -9,8 +9,8 @@ require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/platform-events v0.1.16
-	github.com/goverland-labs/sdk-snapshot-go v0.3.2
+	github.com/goverland-labs/goverland-platform-events v0.2.1
+	github.com/goverland-labs/snapshot-sdk-go v0.4.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/nats-io/nats.go v1.30.2

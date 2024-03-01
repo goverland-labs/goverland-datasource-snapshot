@@ -3,3 +3,4 @@
 /.env
 /bin/*
 /datasource-snapshot
+/cmd.local

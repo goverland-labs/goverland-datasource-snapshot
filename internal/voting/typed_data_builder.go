@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/goverland-labs/sdk-snapshot-go/client"
+	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"github.com/rs/zerolog/log"
 	"github.com/shutter-network/shutter/shlib/shcrypto"
 

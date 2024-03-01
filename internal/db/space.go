@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/goverland-labs/platform-events/events/aggregator"
-	"github.com/goverland-labs/sdk-snapshot-go/client"
+	"github.com/goverland-labs/goverland-platform-events/events/aggregator"
+	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"gorm.io/gorm"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/helpers"

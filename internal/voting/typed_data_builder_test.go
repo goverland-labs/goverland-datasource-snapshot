@@ -3,7 +3,7 @@ package voting
 import (
 	"testing"
 
-	"github.com/goverland-labs/sdk-snapshot-go/client"
+	"github.com/goverland-labs/snapshot-sdk-go/client"
 
 	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
 )
