@@ -13,8 +13,8 @@ import (
 	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
-	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
 
 const (

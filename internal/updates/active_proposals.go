@@ -10,7 +10,7 @@ import (
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
 
 const gap = 30 * time.Minute

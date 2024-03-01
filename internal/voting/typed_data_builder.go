@@ -12,8 +12,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shutter-network/shutter/shlib/shcrypto"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/config"
-	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
 
 const (

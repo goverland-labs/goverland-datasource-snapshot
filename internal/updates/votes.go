@@ -14,8 +14,8 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"gorm.io/gorm"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
-	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
 
 const (

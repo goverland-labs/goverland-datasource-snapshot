@@ -1,4 +1,4 @@
-module github.com/goverland-labs/datasource-snapshot
+module github.com/goverland-labs/goverland-datasource-snapshot
 
 go 1.21
 

@@ -7,7 +7,7 @@ import (
 	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
-	"github.com/goverland-labs/datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
 
 type proposalGetter interface {

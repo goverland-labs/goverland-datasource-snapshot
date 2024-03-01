@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/goverland-labs/datasource-snapshot/proto/votingpb"
+	"github.com/goverland-labs/goverland-datasource-snapshot/proto/votingpb"
 )
 
 type GrpcServer struct {
