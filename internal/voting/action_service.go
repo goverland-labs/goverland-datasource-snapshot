@@ -9,13 +9,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
-	"github.com/goverland-labs/platform-events/events/aggregator"
+	"github.com/goverland-labs/goverland-platform-events/events/aggregator"
 	"github.com/goverland-labs/snapshot-sdk-go/client"
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
-	"github.com/goverland-labs/datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
 
 const (

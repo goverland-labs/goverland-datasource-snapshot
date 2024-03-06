@@ -22,6 +22,7 @@ const (
 	Voting_Validate_FullMethodName = "/votingpb.Voting/Validate"
 	Voting_Prepare_FullMethodName  = "/votingpb.Voting/Prepare"
 	Voting_Vote_FullMethodName     = "/votingpb.Voting/Vote"
+	Voting_GetVote_FullMethodName  = "/votingpb.Voting/GetVote"
 )
 
 // VotingClient is the client API for Voting service.
@@ -31,6 +32,7 @@ type VotingClient interface {
 	Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error)
 	Prepare(ctx context.Context, in *PrepareRequest, opts ...grpc.CallOption) (*PrepareResponse, error)
 	Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
+	GetVote(ctx context.Context, in *GetVoteRequest, opts ...grpc.CallOption) (*GetVoteResponse, error)
 }
 
 type votingClient struct {
@@ -68,6 +70,15 @@ func (c *votingClient) Vote(ctx context.Context, in *VoteRequest, opts ...grpc.C
 	return out, nil
 }
 
+func (c *votingClient) GetVote(ctx context.Context, in *GetVoteRequest, opts ...grpc.CallOption) (*GetVoteResponse, error) {
+	out := new(GetVoteResponse)
+	err := c.cc.Invoke(ctx, Voting_GetVote_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VotingServer is the server API for Voting service.
 // All implementations must embed UnimplementedVotingServer
 // for forward compatibility
@@ -75,6 +86,7 @@ type VotingServer interface {
 	Validate(context.Context, *ValidateRequest) (*ValidateResponse, error)
 	Prepare(context.Context, *PrepareRequest) (*PrepareResponse, error)
 	Vote(context.Context, *VoteRequest) (*VoteResponse, error)
+	GetVote(context.Context, *GetVoteRequest) (*GetVoteResponse, error)
 	mustEmbedUnimplementedVotingServer()
 }
 
@@ -90,6 +102,9 @@ func (UnimplementedVotingServer) Prepare(context.Context, *PrepareRequest) (*Pre
 }
 func (UnimplementedVotingServer) Vote(context.Context, *VoteRequest) (*VoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+}
+func (UnimplementedVotingServer) GetVote(context.Context, *GetVoteRequest) (*GetVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVote not implemented")
 }
 func (UnimplementedVotingServer) mustEmbedUnimplementedVotingServer() {}
 
@@ -158,6 +173,24 @@ func _Voting_Vote_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Voting_GetVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VotingServer).GetVote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Voting_GetVote_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VotingServer).GetVote(ctx, req.(*GetVoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Voting_ServiceDesc is the grpc.ServiceDesc for Voting service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +209,10 @@ var Voting_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Vote",
 			Handler:    _Voting_Vote_Handler,
+		},
+		{
+			MethodName: "GetVote",
+			Handler:    _Voting_GetVote_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
