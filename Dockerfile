@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine3.18 AS builder
+FROM golang:1.21-alpine3.19 AS builder
 
 ARG GITHUB_TOKEN=""
 
@@ -17,6 +17,7 @@ RUN go env -w GOPRIVATE=github.com/goverland-labs/*
 
 # Download dependencies
 COPY go.mod go.sum ./
+COPY protocol/go.mod protocol/go.sum ./
 RUN go mod download && go mod verify
 
 # Copy an application's source
@@ -26,7 +27,7 @@ COPY . .
 RUN go build -o bin/application .
 
 # Prepare executor image
-FROM alpine:3.18 AS production
+FROM alpine:3.19 AS production
 
 RUN apk update && \
     apk add ca-certificates libc6-compat && \
