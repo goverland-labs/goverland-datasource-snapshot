@@ -172,6 +172,9 @@ func (a *Application) initSnapshot() error {
 	}
 
 	opts := []snapshot.Option{
+		snapshot.WithHTTPClient(&http.Client{
+			Transport: metrics.NewHeaderWatcher("general"),
+		}),
 		snapshot.WithInterceptors([]clientv2.RequestInterceptor{
 			metricsMiddleware("general"),
 		}),
@@ -183,6 +186,9 @@ func (a *Application) initSnapshot() error {
 	a.sdk = snapshot.NewSDK(opts...)
 
 	votingOpts := []snapshot.Option{
+		snapshot.WithHTTPClient(&http.Client{
+			Transport: metrics.NewHeaderWatcher("voting"),
+		}),
 		snapshot.WithInterceptors([]clientv2.RequestInterceptor{
 			metricsMiddleware("voting"),
 		}),

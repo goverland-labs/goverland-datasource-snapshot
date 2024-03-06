@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Collecting snapshot sdk key remaining and limit values
+
 ## [0.4.1] - 2024-03-01
 
 ### Changed
