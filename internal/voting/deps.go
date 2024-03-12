@@ -18,6 +18,7 @@ type snapshotSDK interface {
 	Validate(_ context.Context, params snapshot.ValidationParams) (snapshot.ValidationResponse, error)
 	GetVotingPower(_ context.Context, params snapshot.GetVotingPowerParams) (*client.VotingPowerFragment, error)
 	Vote(_ context.Context, params snapshot.VoteParams) (snapshot.VoteResult, error)
+	VoteByID(ctx context.Context, id string) (*client.VoteFragment, error)
 }
 
 type preparedVoteStorage interface {
