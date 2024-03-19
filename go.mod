@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-datasource-snapshot/protocol v0.0.0
 	github.com/goverland-labs/goverland-platform-events v0.2.1
-	github.com/goverland-labs/snapshot-sdk-go v0.4.0
+	github.com/goverland-labs/snapshot-sdk-go v0.4.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/nats-io/nats.go v1.30.2

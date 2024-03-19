@@ -51,6 +51,9 @@ type Application struct {
 	preparedVotesRepo   *db.PreparedVoteRepo
 	actionVotingService *voting.ActionService
 
+	messagesRepo    *db.MessageRepo
+	messagesService *db.MessageService
+
 	publisher *natsclient.Publisher
 
 	sdk       *snapshot.SDK
@@ -127,7 +130,7 @@ func (a *Application) initDatabase() error {
 	}
 
 	// TODO: Use real migrations intead of auto migrations from gorm
-	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}, &db.PreparedVote{}); err != nil {
+	if err := conn.AutoMigrate(&db.Space{}, &db.Proposal{}, &db.Vote{}, &db.PreparedVote{}, &db.Message{}); err != nil {
 		return err
 	}
 
@@ -135,6 +138,7 @@ func (a *Application) initDatabase() error {
 	a.spacesRepo = db.NewSpaceRepo(conn)
 	a.votesRepo = db.NewVoteRepo(conn)
 	a.preparedVotesRepo = db.NewPreparedVoteRepo(conn)
+	a.messagesRepo = db.NewMessageRepo(conn)
 
 	return err
 }
@@ -205,6 +209,7 @@ func (a *Application) initServices() error {
 	a.proposalsService = db.NewProposalService(a.proposalsRepo, a.publisher)
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
+	a.messagesService = db.NewMessageService(a.messagesRepo)
 
 	a.actionVotingService = voting.NewActionService(a.votingSDK, a.proposalsRepo, voting.NewTypedSignDataBuilder(a.cfg.Snapshot), a.preparedVotesRepo)
 
@@ -239,13 +244,15 @@ func (a *Application) initUpdatesWorkers() error {
 	proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
 	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
 	spaces := updates.NewSpacesWorker(a.sdk, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
-	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.cfg.Snapshot.VotesCheckInterval)
+	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
+	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot messages updates", messages.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 
 	return nil
 }

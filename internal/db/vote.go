@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -60,17 +61,28 @@ func (r *VoteRepo) BatchCreate(data []Vote) error {
 	}).CreateInBatches(data, 500).Error
 }
 
-func (r *VoteRepo) GetLatestVote(id string) (*Vote, error) {
-	var (
-		dummy = Vote{}
-		_     = dummy.CreatedAt
-		_     = dummy.ProposalID
-	)
+func (r *VoteRepo) GetLatestVote() (*Vote, error) {
+	var dummy Vote
+	_ = dummy.CreatedAt
+
+	var v Vote
+	err := r.conn.
+		Order("created_at DESC").
+		First(&v).
+		Error
+
+	return &v, err
+}
+
+func (r *VoteRepo) GetLatestVoteByProposal(proposalID string) (*Vote, error) {
+	var dummy Vote
+	_ = dummy.CreatedAt
+	_ = dummy.ProposalID
 
 	var v Vote
 
 	err := r.conn.
-		Where("proposal_id = ?", id).
+		Where("proposal_id = @proposal_id", sql.Named("proposal_id", proposalID)).
 		Order("created_at DESC").
 		First(&v).
 		Error
@@ -125,8 +137,20 @@ func (s *VoteService) BatchCreate(votes []Vote) error {
 	return s.repo.BatchCreate(votes)
 }
 
-func (s *VoteService) GetLatestVote(id string) (*Vote, error) {
-	p, err := s.repo.GetLatestVote(id)
+func (s *VoteService) GetLatestVoteByProposal(proposalID string) (*Vote, error) {
+	p, err := s.repo.GetLatestVoteByProposal(proposalID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (s *VoteService) GetLatestVote() (*Vote, error) {
+	p, err := s.repo.GetLatestVote()
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
