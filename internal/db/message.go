@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
@@ -52,6 +53,19 @@ func (r *MessageRepo) Upsert(m *Message) (isNew bool, err error) {
 	}
 
 	return result.RowsAffected > 0, nil
+}
+
+func (r *MessageRepo) CreateInBatches(messages []*Message) (newRows int, err error) {
+	result := r.conn.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoNothing: true,
+	}).CreateInBatches(messages, 500)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return int(result.RowsAffected), nil
 }
 
 func (r *MessageRepo) FindLatestMCI() (int, error) {
@@ -111,10 +125,15 @@ func NewMessageService(repo *MessageRepo) *MessageService {
 	}
 }
 
-func (s *MessageService) Upsert(message *Message) error {
-	message.Snapshot = helpers.EscapeIllegalCharactersJson(message.Snapshot)
+func (s *MessageService) Upsert(message ...*Message) error {
+	for _, msg := range message {
+		msg.Snapshot = helpers.EscapeIllegalCharactersJson(msg.Snapshot)
+	}
 
-	_, err := s.repo.Upsert(message)
+	_, err := s.repo.CreateInBatches(message)
+	if err != nil {
+		return err
+	}
 
 	return err
 }

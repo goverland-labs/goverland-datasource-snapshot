@@ -109,13 +109,15 @@ func (w *MessagesWorker) fetchMessagesInternal(ctx context.Context, opts ...snap
 }
 
 func (w *MessagesWorker) processMessages(messages []*client.MessageFragment) error {
+	converted := make([]*db.Message, 0, len(messages))
+
 	for _, message := range messages {
 		marshaled, err := json.Marshal(message)
 		if err != nil {
 			return err
 		}
 
-		s := db.Message{
+		converted = append(converted, &db.Message{
 			ID:        helpers.ZeroIfNil(message.GetID()),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -124,12 +126,8 @@ func (w *MessagesWorker) processMessages(messages []*client.MessageFragment) err
 			Timestamp: time.Unix(helpers.ZeroIfNil(message.GetTimestamp()), 0),
 			Type:      db.MessageType(helpers.ZeroIfNil(message.GetType())),
 			Snapshot:  marshaled,
-		}
-
-		if err := w.messages.Upsert(&s); err != nil {
-			return err
-		}
+		})
 	}
 
-	return nil
+	return w.messages.Upsert(converted...)
 }
