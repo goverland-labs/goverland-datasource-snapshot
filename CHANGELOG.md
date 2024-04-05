@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0-draft] - 2024-03-12
+
+### Added
+- Added worker for fetching metadata messages from spanshot
+
+### Changed
+- Update votes for spaces with real updates only
+
 ## [0.4.4] - 2024-03-12
 
 ### Added

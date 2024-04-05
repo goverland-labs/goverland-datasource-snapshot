@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -111,7 +112,7 @@ func (r *ProposalRepo) DeleteByID(id ...string) error {
 	return err
 }
 
-func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int, randOrder bool) ([]string, error) {
+func (r *ProposalRepo) GetProposalIDsForUpdate(spaces []string, interval time.Duration, limit int, randOrder bool) ([]string, error) {
 	var (
 		dummy = Proposal{}
 		_     = dummy.UpdatedAt
@@ -128,21 +129,22 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(interval time.Duration, limit int
 		orderBy = "random()"
 	}
 
-	err := r.conn.Debug().Select("id").
+	query := r.conn.Debug().Select("id").
 		Table("proposals").
 		Where("updated_at < ?", time.Now().Add(-interval)).
 		Where("deleted_at is null").
-		Where(
-			r.conn.
-				Where("to_timestamp((snapshot->'start')::double precision) <= now() and to_timestamp((snapshot->'end')::double precision) >= now()").
-				Or("updated_at < to_timestamp((snapshot->'end')::double precision) and to_timestamp((snapshot->'end')::double precision) < now()"),
+		Where(r.conn.
+			Where("to_timestamp((snapshot->'start')::double precision) <= now() and to_timestamp((snapshot->'end')::double precision) >= now()").
+			Or("updated_at < to_timestamp((snapshot->'end')::double precision) and to_timestamp((snapshot->'end')::double precision) < now()"),
 		).
 		Order(orderBy).
-		Limit(limit).
-		Scan(&ids).
-		Error
+		Limit(limit)
 
-	if err != nil {
+	if len(spaces) > 0 {
+		query = query.Where("space_id in (@space_ids)", sql.Named("space_ids", spaces))
+	}
+
+	if err := query.Scan(&ids).Error; err != nil {
 		return nil, err
 	}
 
@@ -311,8 +313,8 @@ func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error
 	})
 }
 
-func (s *ProposalService) GetProposalIDsForUpdate(interval time.Duration, limit int, randOrder bool) ([]string, error) {
-	return s.repo.GetProposalIDsForUpdate(interval, limit, randOrder)
+func (s *ProposalService) GetProposalIDsForUpdate(spaces []string, interval time.Duration, limit int, randOrder bool) ([]string, error) {
+	return s.repo.GetProposalIDsForUpdate(spaces, interval, limit, randOrder)
 }
 
 func (s *ProposalService) GetProposalForVotes(limit int) ([]string, error) {

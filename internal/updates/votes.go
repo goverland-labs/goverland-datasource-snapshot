@@ -26,24 +26,25 @@ const (
 	voteProposalLimit = 20
 )
 
+type unprocessedSpacesFinder interface {
+	FindSpacesWithNewVotes(after time.Time) ([]string, error)
+}
+
 type VoteWorker struct {
-	sdk       *snapshot.SDK
-	votes     *db.VoteService
-	proposals *db.ProposalService
+	sdk               *snapshot.SDK
+	votes             *db.VoteService
+	proposals         *db.ProposalService
+	unrpocessedSpaces unprocessedSpacesFinder
 
 	checkInterval time.Duration
 }
 
-func NewVotesWorker(
-	sdk *snapshot.SDK,
-	votes *db.VoteService,
-	proposals *db.ProposalService,
-	checkInterval time.Duration,
-) *VoteWorker {
+func NewVotesWorker(sdk *snapshot.SDK, votes *db.VoteService, proposals *db.ProposalService, unrpocessedSpaces unprocessedSpacesFinder, checkInterval time.Duration) *VoteWorker {
 	return &VoteWorker{
-		sdk:       sdk,
-		votes:     votes,
-		proposals: proposals,
+		sdk:               sdk,
+		votes:             votes,
+		proposals:         proposals,
+		unrpocessedSpaces: unrpocessedSpaces,
 
 		checkInterval: checkInterval,
 	}
@@ -105,7 +106,7 @@ func (w *VoteWorker) loop(ctx context.Context) error {
 		}
 
 		start := time.Now()
-		createdAfter := w.getLastVoteCreatedAt(id)
+		createdAfter := w.getLastVoteCreatedAtByProposal(id)
 		if !createdAfter.IsZero() {
 			opts = append(opts, snapshot.ListVotesCreatedAfter(createdAfter))
 		}
@@ -153,7 +154,15 @@ func (w *VoteWorker) loop(ctx context.Context) error {
 }
 
 func (w *VoteWorker) loopActive(ctx context.Context) error {
-	ids, err := w.proposals.GetProposalIDsForUpdate(gap, proposalsPerRequest, true)
+	spaces, err := w.unrpocessedSpaces.FindSpacesWithNewVotes(w.getLastVoteCreatedAt())
+	if err != nil {
+		return fmt.Errorf("get paces with new votes: %w", err)
+	}
+	if len(spaces) == 0 {
+		return nil
+	}
+
+	ids, err := w.proposals.GetProposalIDsForUpdate(spaces, gap, proposalsPerRequest, true)
 	if err != nil {
 		return fmt.Errorf("get proposals for votes: %w", err)
 	}
@@ -165,7 +174,7 @@ func (w *VoteWorker) loopActive(ctx context.Context) error {
 			snapshot.ListVotesWithProposalIDsFilter(id),
 		}
 
-		createdAfter := w.getLastVoteCreatedAt(id)
+		createdAfter := w.getLastVoteCreatedAtByProposal(id)
 		if !createdAfter.IsZero() {
 			opts = append(opts, snapshot.ListVotesCreatedAfter(createdAfter))
 		}
@@ -302,10 +311,10 @@ func convertVpByStrategy(data []*float64) []float64 {
 	return res
 }
 
-func (w *VoteWorker) getLastVoteCreatedAt(id string) time.Time {
+func (w *VoteWorker) getLastVoteCreatedAtByProposal(proposalID string) time.Time {
 	var createdAfter time.Time
 
-	lastVote, err := w.votes.GetLatestVote(id)
+	lastVote, err := w.votes.GetLatestVoteByProposal(proposalID)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get last fetched proposal")
 		return createdAfter
@@ -316,4 +325,19 @@ func (w *VoteWorker) getLastVoteCreatedAt(id string) time.Time {
 	}
 
 	return createdAfter
+}
+
+func (w *VoteWorker) getLastVoteCreatedAt() time.Time {
+	lastVote, err := w.votes.GetLatestVote()
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get last fetched proposal")
+
+		return time.Now()
+	}
+
+	if lastVote != nil {
+		return lastVote.CreatedAt
+	}
+
+	return time.Time{}
 }
