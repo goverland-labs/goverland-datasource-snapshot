@@ -91,6 +91,9 @@ func (c *FetchForSpace) getSpace(args Arguments) (string, error) {
 
 func (c *FetchForSpace) fetchSpace(ctx context.Context, space string) error {
 	s, err := c.Sdk.GetSpaceByID(ctx, space)
+	if err != nil {
+		return err
+	}
 	marshaled, err := json.Marshal(s)
 	if err != nil {
 		return err
