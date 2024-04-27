@@ -116,5 +116,14 @@ func (a *CliApplication) bootstrap() error {
 		return err
 	}
 
+	if err := a.RegisterCommand(&cli.FetchForSpace{
+		Sdk:       a.sdk,
+		Spaces:    a.spacesService,
+		Proposals: a.proposalsService,
+		Votes:     a.votesService,
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }
