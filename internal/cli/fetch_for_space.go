@@ -12,6 +12,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/vektah/gqlparser/v2/ast"
 	"gorm.io/gorm"
+	"slices"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -69,8 +70,15 @@ func (c *FetchForSpace) Execute(args Arguments) error {
 		return err
 	}
 
+	log.Info().Int("count", len(proposalIds)).Msg("fetched proposals")
+
+	activeProposals, err := c.Proposals.GetProposalIDsForUpdate([]string{space}, 0, 500, false)
+	if err != nil {
+		return err
+	}
 	for i := range proposalIds {
-		if err := c.fetchProposalVotes(ctx, proposalIds[i]); err != nil {
+		log.Info().Msgf("[%v/%v] %v proposal is processing", i+1, len(proposalIds), proposalIds[i])
+		if err := c.fetchProposalVotes(ctx, proposalIds[i], slices.Contains(activeProposals, proposalIds[i])); err != nil {
 			return err
 		}
 	}
@@ -144,7 +152,7 @@ func (c *FetchForSpace) fetchProposals(ctx context.Context, space string) ([]str
 	return proposalIds, nil
 }
 
-func (c *FetchForSpace) fetchProposalVotes(ctx context.Context, id string) error {
+func (c *FetchForSpace) fetchProposalVotes(ctx context.Context, id string, active bool) error {
 
 	opts := []snapshot.ListVotesOption{
 		snapshot.ListVotesWithOrderBy("created", client.OrderDirectionAsc),
@@ -167,11 +175,12 @@ func (c *FetchForSpace) fetchProposalVotes(ctx context.Context, id string) error
 		}
 
 		if len(votes) < votesPerRequest {
-			err := c.Proposals.MarkVotesProcessed(id)
-			if err != nil {
-				log.Warn().Err(err).Msgf("mark votes processed: %s", id)
+			if !active {
+				err := c.Proposals.MarkVotesProcessed(id)
+				if err != nil {
+					log.Warn().Err(err).Msgf("mark votes processed: %s", id)
+				}
 			}
-
 			break
 		}
 
