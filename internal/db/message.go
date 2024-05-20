@@ -1,11 +1,14 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"time"
 
+	"github.com/goverland-labs/goverland-platform-events/events/ipfs"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -17,6 +20,8 @@ const (
 	ProposalMessage        MessageType = "proposal"
 	InvalidProposalMessage MessageType = "invalid-proposal"
 	ArchiveProposalMessage MessageType = "archive-proposal"
+	DeleteProposalMessage  MessageType = "delete-proposal"
+	SettingsMessage        MessageType = "settings"
 )
 
 type MessageType string
@@ -31,6 +36,7 @@ type Message struct {
 	Timestamp time.Time       `gorm:"index:space_type_idx"`
 	Type      MessageType     `gorm:"index:space_type_idx"`
 	Snapshot  json.RawMessage `gorm:"type:jsonb;serializer:json"`
+	IpfsID    string          `gorm:"-"` // virtual property
 }
 
 type MessageRepo struct {
@@ -116,18 +122,28 @@ func (r *MessageRepo) FindSpacesWithNewVotes(after time.Time) ([]string, error) 
 }
 
 type MessageService struct {
-	repo *MessageRepo
+	repo      *MessageRepo
+	publisher Publisher
 }
 
-func NewMessageService(repo *MessageRepo) *MessageService {
+func NewMessageService(repo *MessageRepo, publisher Publisher) *MessageService {
 	return &MessageService{
-		repo: repo,
+		repo:      repo,
+		publisher: publisher,
 	}
 }
 
 func (s *MessageService) Upsert(message ...*Message) error {
 	for _, msg := range message {
 		msg.Snapshot = helpers.EscapeIllegalCharactersJson(msg.Snapshot)
+
+		// publishing all incoming messages to the ipfs fetcher
+		if err := s.publisher.PublishJSON(context.Background(), ipfs.SubjectMessageCreated, ipfs.MessagePayload{
+			IpfsID: msg.IpfsID,
+			Type:   string(msg.Type),
+		}); err != nil {
+			log.Error().Err(err).Msg("Failed to publish message")
+		}
 	}
 
 	_, err := s.repo.CreateInBatches(message)
