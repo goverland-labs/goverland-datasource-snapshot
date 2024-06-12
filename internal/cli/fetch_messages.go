@@ -67,6 +67,10 @@ func (c *FetchMessages) Execute(args Arguments) error {
 		panic(fmt.Sprintf("import type is not implemented: %s", importType))
 	}
 
+	if err != nil {
+		return fmt.Errorf("fetching messages: %w", err)
+	}
+
 	log.Info().Msgf("fetch finished. Took: %v", time.Since(start))
 
 	return nil
