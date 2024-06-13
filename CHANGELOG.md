@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] - 2024-06-13
+
 ### Added
 - Integration with Ipfs Fetcher
 - Consuming delete proposal events based on snapshot messages
