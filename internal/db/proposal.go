@@ -141,7 +141,7 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(spaces []string, interval time.Du
 		Limit(limit)
 
 	if len(spaces) > 0 {
-		query = query.Where("space_id in (@space_ids)", sql.Named("space_ids", spaces))
+		query = query.Where("space_id in @space_ids", sql.Named("space_ids", spaces))
 	}
 
 	if err := query.Scan(&ids).Error; err != nil {

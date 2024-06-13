@@ -125,5 +125,12 @@ func (a *CliApplication) bootstrap() error {
 		return err
 	}
 
+	if err := a.RegisterCommand(&cli.FetchMessages{
+		Messages:  a.messagesService,
+		Publisher: a.publisher,
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }

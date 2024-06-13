@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Integration with Ipfs Fetcher
+- Consuming delete proposal events based on snapshot messages
+
+### Fixed
+- GetProposalIDsForUpdate with list of spaces
+
 ## [0.5.0-draft] - 2024-03-12
 
 ### Added

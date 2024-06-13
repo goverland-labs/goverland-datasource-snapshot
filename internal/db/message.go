@@ -1,11 +1,14 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"time"
 
+	"github.com/goverland-labs/goverland-platform-events/events/ipfs"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -17,6 +20,8 @@ const (
 	ProposalMessage        MessageType = "proposal"
 	InvalidProposalMessage MessageType = "invalid-proposal"
 	ArchiveProposalMessage MessageType = "archive-proposal"
+	DeleteProposalMessage  MessageType = "delete-proposal"
+	SettingsMessage        MessageType = "settings"
 )
 
 type MessageType string
@@ -31,6 +36,7 @@ type Message struct {
 	Timestamp time.Time       `gorm:"index:space_type_idx"`
 	Type      MessageType     `gorm:"index:space_type_idx"`
 	Snapshot  json.RawMessage `gorm:"type:jsonb;serializer:json"`
+	IpfsID    string          `gorm:"-"` // virtual property
 }
 
 type MessageRepo struct {
@@ -115,19 +121,52 @@ func (r *MessageRepo) FindSpacesWithNewVotes(after time.Time) ([]string, error) 
 	return spaces, nil
 }
 
-type MessageService struct {
-	repo *MessageRepo
+func (r *MessageRepo) FindDeleteProposals(limit, offset int) ([]string, error) {
+	var dummy Message
+	_ = dummy.Snapshot
+
+	var snapshots []string
+	err := r.conn.
+		Select("snapshot").
+		Table("messages").
+		Where("type = @type", sql.Named("type", DeleteProposalMessage)).
+		Where("space != ''").
+		Where("timestamp >= @timestamp", sql.Named("timestamp", time.Now().Add(-365*24*time.Hour))).
+		Limit(limit).
+		Offset(offset).
+		Pluck("snapshot", &snapshots).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return snapshots, nil
 }
 
-func NewMessageService(repo *MessageRepo) *MessageService {
+type MessageService struct {
+	repo      *MessageRepo
+	publisher Publisher
+}
+
+func NewMessageService(repo *MessageRepo, publisher Publisher) *MessageService {
 	return &MessageService{
-		repo: repo,
+		repo:      repo,
+		publisher: publisher,
 	}
 }
 
 func (s *MessageService) Upsert(message ...*Message) error {
 	for _, msg := range message {
 		msg.Snapshot = helpers.EscapeIllegalCharactersJson(msg.Snapshot)
+
+		// publishing all incoming messages to the ipfs fetcher
+		if err := s.publisher.PublishJSON(context.Background(), ipfs.SubjectMessageCreated, ipfs.MessagePayload{
+			IpfsID: msg.IpfsID,
+			Type:   string(msg.Type),
+		}); err != nil {
+			log.Error().Err(err).Msg("Failed to publish message")
+		}
 	}
 
 	_, err := s.repo.CreateInBatches(message)
@@ -154,4 +193,13 @@ func (s *MessageService) FindSpacesWithNewVotes(after time.Time) ([]string, erro
 	}
 
 	return spaces, err
+}
+
+func (s *MessageService) FindDeleteProposals(limit, offset int) ([]string, error) {
+	ids, err := s.repo.FindDeleteProposals(limit, offset)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return ids, err
 }

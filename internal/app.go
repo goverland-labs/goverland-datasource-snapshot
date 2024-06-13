@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Yamashou/gqlgenc/clientv2"
+	"github.com/goverland-labs/goverland-ipfs-fetcher/protocol/ipfsfetcherpb"
 	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	grcpprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -17,21 +19,24 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/s-larionov/process-manager"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
+
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/metrics"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/voting"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/grpcsrv"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/health"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/prometheus"
-	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
 )
 
 type Application struct {
@@ -55,6 +60,7 @@ type Application struct {
 	messagesService *db.MessageService
 
 	publisher *natsclient.Publisher
+	natsConn  *nats.Conn
 
 	sdk       *snapshot.SDK
 	votingSDK *snapshot.SDK
@@ -160,6 +166,7 @@ func (a *Application) initNats() error {
 	}
 
 	a.publisher = publisher
+	a.natsConn = nc
 
 	return nil
 }
@@ -209,7 +216,7 @@ func (a *Application) initServices() error {
 	a.proposalsService = db.NewProposalService(a.proposalsRepo, a.publisher)
 	a.spacesService = db.NewSpaceService(a.spacesRepo, a.publisher)
 	a.votesService = db.NewVoteService(a.votesRepo, a.publisher)
-	a.messagesService = db.NewMessageService(a.messagesRepo)
+	a.messagesService = db.NewMessageService(a.messagesRepo, a.publisher)
 
 	a.actionVotingService = voting.NewActionService(a.votingSDK, a.proposalsRepo, voting.NewTypedSignDataBuilder(a.cfg.Snapshot), a.preparedVotesRepo)
 
@@ -247,12 +254,25 @@ func (a *Application) initUpdatesWorkers() error {
 	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
 	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 
+	conn, err := grpc.Dial(
+		a.cfg.InternalAPI.IpfsFetcherAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with ipfs fetcher server: %v", err)
+	}
+
+	fc := ipfsfetcherpb.NewMessageClient(conn)
+	fetcherWrapper := fetcher.NewClient(fc)
+	deleteProposals := updates.NewDeleteProposalConsumer(a.proposalsService, fetcherWrapper, a.natsConn)
+
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot messages updates", messages.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("delete-proposal-consumer", deleteProposals.Start))
 
 	return nil
 }

@@ -126,6 +126,7 @@ func (w *MessagesWorker) processMessages(messages []*client.MessageFragment) err
 			Timestamp: time.Unix(helpers.ZeroIfNil(message.GetTimestamp()), 0),
 			Type:      db.MessageType(helpers.ZeroIfNil(message.GetType())),
 			Snapshot:  marshaled,
+			IpfsID:    helpers.ZeroIfNil(message.GetIpfs()),
 		})
 	}
 

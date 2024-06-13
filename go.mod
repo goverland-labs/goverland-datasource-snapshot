@@ -1,6 +1,8 @@
 module github.com/goverland-labs/goverland-datasource-snapshot
 
-go 1.21
+go 1.22
+
+toolchain go1.22.3
 
 replace github.com/goverland-labs/goverland-datasource-snapshot/protocol => ./protocol
 
@@ -13,7 +15,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-datasource-snapshot/protocol v0.0.0
-	github.com/goverland-labs/goverland-platform-events v0.2.1
+	github.com/goverland-labs/goverland-ipfs-fetcher/protocol v0.0.1
+	github.com/goverland-labs/goverland-platform-events v0.2.3
 	github.com/goverland-labs/snapshot-sdk-go v0.4.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
