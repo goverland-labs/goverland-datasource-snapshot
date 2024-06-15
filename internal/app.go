@@ -248,9 +248,10 @@ func (a *Application) initGrpc() error {
 }
 
 func (a *Application) initUpdatesWorkers() error {
+	spacesUpdater := updates.NewSpacesUpdater(a.sdk)
 	proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
 	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
-	spaces := updates.NewSpacesWorker(a.sdk, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
+	spaces := updates.NewSpacesWorker(spacesUpdater, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
 	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
 	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 

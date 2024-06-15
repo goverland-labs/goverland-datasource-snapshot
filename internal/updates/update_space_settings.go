@@ -15,28 +15,32 @@ import (
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
 )
 
-type DeleteProposalConsumer struct {
+const (
+	updateSpaceConsGroup = "update_space_settings"
+)
+
+type UpdateSpaceSettingsConsumer struct {
 	con *client.Consumer[pevents.MessagePayload]
 
-	proposals *db.ProposalService
-	fc        *fetcher.Client
-	nc        *nats.Conn
+	spaceUpdater *SpacesUpdater
+	fc           *fetcher.Client
+	nc           *nats.Conn
 }
 
-func NewDeleteProposalConsumer(
-	s *db.ProposalService,
+func NewUpdateSpaceSettingsConsumer(
+	su *SpacesUpdater,
 	fc *fetcher.Client,
 	nc *nats.Conn,
-) *DeleteProposalConsumer {
-	return &DeleteProposalConsumer{
-		proposals: s,
-		fc:        fc,
-		nc:        nc,
+) *UpdateSpaceSettingsConsumer {
+	return &UpdateSpaceSettingsConsumer{
+		spaceUpdater: su,
+		fc:           fc,
+		nc:           nc,
 	}
 }
 
-func (c *DeleteProposalConsumer) Start(ctx context.Context) error {
-	group := config.GenerateGroupName("delete_proposal")
+func (c *UpdateSpaceSettingsConsumer) Start(ctx context.Context) error {
+	group := config.GenerateGroupName(updateSpaceConsGroup)
 	opts := []client.ConsumerOpt{
 		client.WithRateLimit(rateLimit),
 		client.WithMaxAckPending(maxPendingElements),
@@ -57,13 +61,13 @@ func (c *DeleteProposalConsumer) Start(ctx context.Context) error {
 	return c.stop()
 }
 
-func (c *DeleteProposalConsumer) stop() error {
+func (c *UpdateSpaceSettingsConsumer) stop() error {
 	if c.con == nil {
 		return nil
 	}
 
 	if err := c.con.Close(); err != nil {
-		log.Error().Err(err).Msg("unable to close delete proposal consumer")
+		log.Error().Err(err).Msg("unable to close update space settings consumer")
 
 		return err
 	}
@@ -71,27 +75,27 @@ func (c *DeleteProposalConsumer) stop() error {
 	return nil
 }
 
-func (c *DeleteProposalConsumer) handler() pevents.MessageHandler {
+func (c *UpdateSpaceSettingsConsumer) handler() pevents.MessageHandler {
 	return func(payload pevents.MessagePayload) error {
-		// process only deleted proposals
-		if payload.Type != string(db.DeleteProposalMessage) {
+		// process only update space settings
+		if payload.Type != string(db.SettingsMessage) {
 			return nil
 		}
 
-		proposalID, err := c.fc.GetDeletedProposalIDByIpfsID(context.Background(), payload.IpfsID)
+		space, err := c.fc.GetUpdatedSpaceByIpfsID(context.Background(), payload.IpfsID)
 		if err != nil {
-			log.Error().Err(err).Msg("getting deleted proposal ipfs data")
+			log.Error().Err(err).Msg("get updated space by ipfs message")
 
 			return err
 		}
 
-		if err = c.proposals.Delete([]string{proposalID}); err != nil {
-			log.Error().Err(err).Msg("process deleted proposal message")
+		if err = c.spaceUpdater.ProcessSpace(context.Background(), space); err != nil {
+			log.Error().Err(err).Msg("process updated space message")
 
 			return err
 		}
 
-		log.Debug().Msgf("deleted proposal[%s] by ipfs message: %s", proposalID, payload.IpfsID)
+		log.Debug().Msgf("updated space[%s] by ipfs message: %s", space, payload.IpfsID)
 
 		return nil
 	}

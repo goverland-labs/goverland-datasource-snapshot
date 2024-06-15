@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/goverland-labs/snapshot-sdk-go/client"
-	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
-	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
@@ -16,17 +14,16 @@ import (
 const spacesPerRequest = 500
 
 type SpacesWorker struct {
-	sdk    *snapshot.SDK
-	spaces *db.SpaceService
+	spaceUpdater *SpacesUpdater
+	spaces       *db.SpaceService
 
 	checkInterval time.Duration
 }
 
-func NewSpacesWorker(sdk *snapshot.SDK, spaces *db.SpaceService, checkInterval time.Duration) *SpacesWorker {
+func NewSpacesWorker(spaceUpdater *SpacesUpdater, spaces *db.SpaceService, checkInterval time.Duration) *SpacesWorker {
 	return &SpacesWorker{
-		sdk:    sdk,
-		spaces: spaces,
-
+		spaceUpdater:  spaceUpdater,
+		spaces:        spaces,
 		checkInterval: checkInterval,
 	}
 }
@@ -59,31 +56,7 @@ func (w *SpacesWorker) loop(ctx context.Context) error {
 		return nil
 	}
 
-	spaces, err := w.fetchSpacesInternal(ctx, []snapshot.ListSpaceOption{snapshot.ListSpaceWithIDFilter(unknownSpaces...)})
-	if err != nil {
-		return err
-	}
-
-	log.Info().Int("count", len(spaces)).Msg("fetched spaces")
-
-	if err := w.processSpaces(spaces); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (w *SpacesWorker) fetchSpacesInternal(ctx context.Context, opts []snapshot.ListSpaceOption) ([]*client.SpaceFragment, error) {
-	for {
-		spaces, err := w.sdk.ListSpace(ctx, opts...)
-		if errors.Is(err, snapshot.ErrTooManyRequests) {
-			log.Warn().Err(err).Msg("snapshot api limits are reached")
-			<-time.After(5 * time.Second)
-			continue
-		}
-
-		return spaces, err
-	}
+	return w.spaceUpdater.ProcessSpaces(ctx, unknownSpaces)
 }
 
 func (w *SpacesWorker) processSpaces(spaces []*client.SpaceFragment) error {
