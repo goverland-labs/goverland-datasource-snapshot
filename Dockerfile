@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine3.19 AS builder
+FROM golang:1.22-alpine3.20 AS builder
 
 ARG GITHUB_TOKEN=""
 
@@ -24,10 +24,11 @@ RUN go mod download && go mod verify
 COPY . .
 
 # Build an application
-RUN go build -o bin/application .
+RUN go build -o bin/datasource-snapshot .
+RUN go build -o bin/datasource-snapshot-cli .
 
 # Prepare executor image
-FROM alpine:3.19 AS production
+FROM alpine:3.20 AS production
 
 RUN apk update && \
     apk add ca-certificates libc6-compat && \
@@ -37,4 +38,4 @@ WORKDIR /opt
 
 COPY --from=builder /opt/bin/ ./
 
-CMD ["./application"]
+CMD ["./datasource-snapshot"]

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added cli command building in the docker container
+
 ## [0.5.1] - 2024-06-13
 
 ### Added
