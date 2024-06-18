@@ -19,9 +19,10 @@ type SpacesUpdater struct {
 	spaces *db.SpaceService
 }
 
-func NewSpacesUpdater(sdk *snapshot.SDK) *SpacesUpdater {
+func NewSpacesUpdater(sdk *snapshot.SDK, spaces *db.SpaceService) *SpacesUpdater {
 	return &SpacesUpdater{
-		sdk: sdk,
+		sdk:    sdk,
+		spaces: spaces,
 	}
 }
 

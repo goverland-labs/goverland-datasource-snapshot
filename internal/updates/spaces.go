@@ -2,11 +2,8 @@ package updates
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"time"
-
-	"github.com/goverland-labs/snapshot-sdk-go/client"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
@@ -57,26 +54,4 @@ func (w *SpacesWorker) loop(ctx context.Context) error {
 	}
 
 	return w.spaceUpdater.ProcessSpaces(ctx, unknownSpaces)
-}
-
-func (w *SpacesWorker) processSpaces(spaces []*client.SpaceFragment) error {
-	for _, space := range spaces {
-		marshaled, err := json.Marshal(space)
-		if err != nil {
-			return err
-		}
-
-		s := db.Space{
-			ID:        space.ID,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Snapshot:  marshaled,
-		}
-
-		if err := w.spaces.Upsert(&s); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

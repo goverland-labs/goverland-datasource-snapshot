@@ -144,6 +144,29 @@ func (r *MessageRepo) FindDeleteProposals(limit, offset int) ([]string, error) {
 	return snapshots, nil
 }
 
+func (r *MessageRepo) FindDaoUpdateSettings(limit, offset int) ([]string, error) {
+	var dummy Message
+	_ = dummy.Snapshot
+
+	var snapshots []string
+	err := r.conn.
+		Select("snapshot").
+		Table("messages").
+		Where("type = @type", sql.Named("type", SettingsMessage)).
+		Where("space != ''").
+		Where("timestamp >= @timestamp", sql.Named("timestamp", time.Now().Add(-365*24*time.Hour))).
+		Limit(limit).
+		Offset(offset).
+		Pluck("snapshot", &snapshots).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return snapshots, nil
+}
+
 type MessageService struct {
 	repo      *MessageRepo
 	publisher Publisher
@@ -197,6 +220,15 @@ func (s *MessageService) FindSpacesWithNewVotes(after time.Time) ([]string, erro
 
 func (s *MessageService) FindDeleteProposals(limit, offset int) ([]string, error) {
 	ids, err := s.repo.FindDeleteProposals(limit, offset)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return ids, err
+}
+
+func (s *MessageService) FindDaoUpdateSettings(limit, offset int) ([]string, error) {
+	ids, err := s.repo.FindDaoUpdateSettings(limit, offset)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
