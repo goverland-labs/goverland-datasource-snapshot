@@ -25,7 +25,7 @@ COPY . .
 
 # Build an application
 RUN go build -o bin/datasource-snapshot .
-RUN go build -o bin/datasource-snapshot-cli .
+RUN go build -o bin/datasource-snapshot-cli cmd/cli/main.go
 
 # Prepare executor image
 FROM alpine:3.20 AS production
