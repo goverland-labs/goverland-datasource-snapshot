@@ -10,6 +10,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Added cli command building in the docker container
 
+### Fixed
+- Updated go version up to 1.22
+
 ## [0.5.1] - 2024-06-13
 
 ### Added
