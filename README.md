@@ -19,7 +19,7 @@ The application exposes Prometheus metrics.
 
 - Snapshot SDK Integration: facilitates interaction with Snapshot services for proposals, spaces, votes, and messages.
 - Event Publishing: utilizes NATS for event-driven architecture.
-- gRPC Services: provides gRPC-based APIs for interacting with the application.
+- gRPC Services: provides gRPC-based APIs for interacting with the Snapshot from internal services.
 - Database: Integrates with PostgreSQL for storing and managing data.
 - Metrics and Monitoring: exposes Prometheus metrics for monitoring.
 - Health Checks: Implements health check endpoints to monitor the application's status.
