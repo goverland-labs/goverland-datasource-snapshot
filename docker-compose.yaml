@@ -4,7 +4,9 @@ services:
   datasource:
     image: "postgres:11"
     ports:
-      - "5432:5432"
+      - "11000:11000" # voting gRPC server
+      - "3000:3000" # health check
+      - "2112:2112" # prometheus metrics
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
