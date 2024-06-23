@@ -13,7 +13,7 @@ The application exposes Prometheus metrics.
 ## Usage
 
 - The application initializes various services and workers to manage proposals, spaces, votes, and messages.
-- It sets up gRPC servers for remote procedure calls and integrates with NATS for event publishing.
+- Also it implements interface for voting on Snapshot  via gRPC calls.
 
 ## Features
 
