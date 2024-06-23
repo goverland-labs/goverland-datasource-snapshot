@@ -78,7 +78,7 @@ Prometheus metrics are exposed at [http://localhost:2112/metrics](http://localho
 
    - After the image is built, you can run it as a container. Use the following command to start the container:
      ```bash
-     docker run -d --name goverland-datasource-snapshot -p 8080:8080 goverland-datasource-snapshot
+     docker run -d --name goverland-datasource-snapshot -p 11000:11000 goverland-datasource-snapshot
      ```
 
 ## Contribution Rules
