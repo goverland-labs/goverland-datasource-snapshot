@@ -40,7 +40,8 @@ The application exposes Prometheus metrics.
    ```
 2. Install the required Go dependencies:
    ```bash
-    go mod tidy
+    go mod download
+    go mod verify
    ```
 3. Spin up the necessary containers:
    ```bash
