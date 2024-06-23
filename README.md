@@ -7,7 +7,7 @@
 Goverland Datasource Snapshot is a micro service designed to manage and synchronize various data sources for Goverland ecosystem.
 At the moment the focus is on Snapshot API.
 The microservice also leverages technologies such as gRPC and NATS.
-PostgresQL is used as database.
+PostgreSQL is used as database.
 The application exposes Prometheus metrics.
 
 ## Usage
