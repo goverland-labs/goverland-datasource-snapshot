@@ -316,7 +316,7 @@ func (w *VoteWorker) getLastVoteCreatedAtByProposal(proposalID string) time.Time
 
 	lastVote, err := w.votes.GetLatestVoteByProposal(proposalID)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get last fetched proposal")
+		log.Warn().Err(err).Msg("unable to get last fetched vote for proposal")
 		return createdAfter
 	}
 
@@ -330,7 +330,7 @@ func (w *VoteWorker) getLastVoteCreatedAtByProposal(proposalID string) time.Time
 func (w *VoteWorker) getLastVoteCreatedAt() time.Time {
 	lastVote, err := w.votes.GetLatestVote()
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get last fetched proposal")
+		log.Warn().Err(err).Msg("unable to get last fetched proposal")
 
 		return time.Now()
 	}

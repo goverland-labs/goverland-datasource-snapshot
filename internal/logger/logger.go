@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/s-larionov/process-manager"
 )
@@ -13,7 +14,7 @@ func (l *ProcessManagerLogger) Info(msg string, fields ...process.LogFields) {
 }
 
 func (l *ProcessManagerLogger) Error(msg string, err error, fields ...process.LogFields) {
-	log.Error().Err(err).Fields(convertFields(fields)).Msg(msg)
+	Critical(err).Fields(convertFields(fields)).Msg(msg)
 }
 
 func convertFields(fields []process.LogFields) map[string]interface{} {
@@ -22,4 +23,8 @@ func convertFields(fields []process.LogFields) map[string]interface{} {
 	}
 
 	return fields[0]
+}
+
+func Critical(err error) *zerolog.Event {
+	return log.Error().Err(err).Str("severity", "CRITICAL")
 }

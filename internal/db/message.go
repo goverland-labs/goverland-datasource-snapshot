@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/goverland-labs/goverland-platform-events/events/ipfs"
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/logger"
 )
 
 const (
@@ -165,7 +165,7 @@ func (s *MessageService) Upsert(message ...*Message) error {
 			IpfsID: msg.IpfsID,
 			Type:   string(msg.Type),
 		}); err != nil {
-			log.Error().Err(err).Msg("Failed to publish message")
+			logger.Critical(err).Msg("failed to publish message")
 		}
 	}
 
