@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/goverland-labs/goverland-platform-events/events/aggregator"
@@ -108,11 +107,11 @@ func (s *SpaceService) Upsert(space *Space) error {
 	}
 
 	if !isNew {
-		log.Debug().Str("space", fmt.Sprintf("%s", space.ID)).Msg("space updated")
+		log.Debug().Str("space", space.ID).Msg("space updated")
 		return s.publishEvent(aggregator.SubjectDaoUpdated, space)
 	}
 
-	log.Debug().Str("space", fmt.Sprintf("%s", space.ID)).Msg("space created")
+	log.Debug().Str("space", space.ID).Msg("space created")
 	return s.publishEvent(aggregator.SubjectDaoCreated, space)
 }
 
