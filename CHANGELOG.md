@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Changed level of errors in log
+
 ## [0.5.2] - 2024-06-18
 
 ### Added

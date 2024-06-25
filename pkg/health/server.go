@@ -36,7 +36,7 @@ func DefaultHandler(manager *process.Manager) http.Handler {
 
 		body, err := json.Marshal(resp)
 		if err != nil {
-			log.Error().Err(err).Msg("unable to marshal health check")
+			log.Warn().Err(err).Msg("unable to marshal health check")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

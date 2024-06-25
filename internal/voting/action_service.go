@@ -315,7 +315,7 @@ func getSnapshot(snapshot *string) any {
 
 	numSnapshot, err := strconv.Atoi(*snapshot)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to convert snapshot to int")
+		log.Warn().Err(err).Msg("failed to convert snapshot to int")
 
 		return latestSnapshot
 	}

@@ -16,6 +16,7 @@ import (
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/logger"
 )
 
 const (
@@ -189,7 +190,7 @@ func (w *ProposalWorker) getLastProposalCreatedAt() time.Time {
 
 	lastProposal, err := w.proposals.GetLatestProposal()
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get last fetched proposal")
+		logger.Critical(err).Msg("unable to get last fetched proposal")
 		return createdAfter
 	}
 

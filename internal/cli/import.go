@@ -15,6 +15,7 @@ import (
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/logger"
 )
 
 const (
@@ -123,7 +124,7 @@ func (c *Import) Execute(args Arguments) error {
 		}
 
 		if err != nil {
-			log.Error().Err(err).Msgf("upsert %s: %d: %s", importType, idx, line[0])
+			logger.Critical(err).Msgf("upsert %s: %d: %s", importType, idx, line[0])
 		}
 	}
 
@@ -305,7 +306,7 @@ func prepareChoice(str string) json.RawMessage {
 func getTimeFromString(val string) time.Time {
 	i, err := strconv.ParseInt(val, 10, 64)
 	if err != nil {
-		log.Error().Err(err).Msgf("convert %s to int", val)
+		log.Warn().Err(err).Msgf("convert %s to int", val)
 		return time.Now()
 	}
 
@@ -315,7 +316,7 @@ func getTimeFromString(val string) time.Time {
 func getUnixFromString(val string) int64 {
 	i, err := strconv.ParseInt(val, 10, 64)
 	if err != nil {
-		log.Error().Err(err).Msgf("convert %s to int", val)
+		log.Warn().Err(err).Msgf("convert %s to int", val)
 		return 0
 	}
 
@@ -324,7 +325,7 @@ func getUnixFromString(val string) int64 {
 func getFloat64FromString(val string) float64 {
 	i, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		log.Error().Err(err).Msgf("convert %s to float", val)
+		log.Warn().Err(err).Msgf("convert %s to float", val)
 		return 0
 	}
 

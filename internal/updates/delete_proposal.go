@@ -70,7 +70,7 @@ func (c *DeleteProposalConsumer) stop() error {
 	}
 
 	if err := c.con.Close(); err != nil {
-		log.Error().Err(err).Msg("unable to close delete proposal consumer")
+		log.Warn().Err(err).Msg("unable to close delete proposal consumer")
 
 		return err
 	}
@@ -87,13 +87,13 @@ func (c *DeleteProposalConsumer) handler() pevents.MessageHandler {
 
 		proposalID, err := c.fc.GetDeletedProposalIDByIpfsID(context.Background(), payload.IpfsID)
 		if err != nil {
-			log.Error().Err(err).Msg("getting deleted proposal ipfs data")
+			log.Warn().Err(err).Msg("getting deleted proposal ipfs data")
 
 			return err
 		}
 
 		if err = c.proposals.Delete([]string{proposalID}); err != nil {
-			log.Error().Err(err).Msg("process deleted proposal message")
+			log.Warn().Err(err).Msg("process deleted proposal message")
 
 			return err
 		}

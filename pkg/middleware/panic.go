@@ -35,7 +35,7 @@ func PanicLog(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(r.Body)
 
-	log.Error().Fields(map[string]interface{}{
+	log.Error().Str("severity", "CRITICAL").Fields(map[string]interface{}{
 		"request": fmt.Sprintf("%s %s?%s", r.Method, r.URL.String(), r.URL.Query().Encode()),
 		"body":    string(body),
 		"stack":   string(debug.Stack()),
