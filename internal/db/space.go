@@ -7,7 +7,10 @@ import (
 
 	"github.com/goverland-labs/goverland-platform-events/events/aggregator"
 	"github.com/goverland-labs/snapshot-sdk-go/client"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 )
@@ -31,15 +34,32 @@ func NewSpaceRepo(conn *gorm.DB) *SpaceRepo {
 }
 
 func (r *SpaceRepo) Upsert(s *Space) (isNew bool, err error) {
-	result := r.conn.
+	var existed Space
+
+	err = r.conn.
+		Select("id").
 		Where(Space{ID: s.ID}).
-		FirstOrCreate(&s)
+		First(&existed).
+		Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, err
+	}
+
+	isNew = errors.Is(err, gorm.ErrRecordNotFound)
+
+	s.UpdatedAt = time.Now()
+	result := r.conn.
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			UpdateAll: true,
+		}).
+		Create(&s)
 
 	if result.Error != nil {
 		return false, result.Error
 	}
 
-	return result.RowsAffected > 0, nil
+	return isNew, nil
 }
 
 func (r *SpaceRepo) FindUndefinedSpaceIDs(limit int) ([]string, error) {
@@ -87,13 +107,15 @@ func (s *SpaceService) Upsert(space *Space) error {
 	}
 
 	if !isNew {
-		return nil
+		log.Debug().Str("space", space.ID).Msg("space updated")
+		return s.publishEvent(aggregator.SubjectDaoUpdated, space)
 	}
 
-	return s.publishEvent(space)
+	log.Debug().Str("space", space.ID).Msg("space created")
+	return s.publishEvent(aggregator.SubjectDaoCreated, space)
 }
 
-func (s *SpaceService) publishEvent(space *Space) error {
+func (s *SpaceService) publishEvent(subject string, space *Space) error {
 	var unmarshaled client.SpaceFragment
 	if err := json.Unmarshal(space.Snapshot, &unmarshaled); err != nil {
 		return err
@@ -117,7 +139,7 @@ func (s *SpaceService) publishEvent(space *Space) error {
 		})
 	}
 
-	return s.publisher.PublishJSON(context.Background(), aggregator.SubjectDaoCreated, aggregator.DaoPayload{
+	return s.publisher.PublishJSON(context.Background(), subject, aggregator.DaoPayload{
 		ID:             space.ID,
 		Name:           helpers.ZeroIfNil(unmarshaled.Name),
 		About:          helpers.ZeroIfNil(unmarshaled.About),

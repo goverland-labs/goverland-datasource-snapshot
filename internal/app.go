@@ -248,9 +248,10 @@ func (a *Application) initGrpc() error {
 }
 
 func (a *Application) initUpdatesWorkers() error {
+	spacesUpdater := updates.NewSpacesUpdater(a.sdk, a.spacesService)
 	proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
 	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
-	spaces := updates.NewSpacesWorker(a.sdk, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
+	spaces := updates.NewSpacesWorker(spacesUpdater, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
 	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
 	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 
@@ -266,6 +267,8 @@ func (a *Application) initUpdatesWorkers() error {
 	fetcherWrapper := fetcher.NewClient(fc)
 	deleteProposals := updates.NewDeleteProposalConsumer(a.proposalsService, fetcherWrapper, a.natsConn)
 
+	updateSpaceConsumer := updates.NewUpdateSpaceSettingsConsumer(spacesUpdater, fetcherWrapper, a.natsConn)
+
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
@@ -273,6 +276,7 @@ func (a *Application) initUpdatesWorkers() error {
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot messages updates", messages.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("delete-proposal-consumer", deleteProposals.Start))
+	a.manager.AddWorker(process.NewCallbackWorker("update-space-settings-consumer", updateSpaceConsumer.Start))
 
 	return nil
 }

@@ -20,6 +20,7 @@ const (
 
 	FetchTypeUnspecified    FetchType = "unspecified"
 	FetchTypeDeleteProposal FetchType = "delete-proposal"
+	FetchUpdateDaoSettings  FetchType = "settings"
 )
 
 type FetchType string
@@ -63,6 +64,8 @@ func (c *FetchMessages) Execute(args Arguments) error {
 	switch importType {
 	case FetchTypeDeleteProposal:
 		err = c.processDeleteProposals(int(limit))
+	case FetchUpdateDaoSettings:
+		err = c.processDaoUpdateSettings(int(limit))
 	default:
 		panic(fmt.Sprintf("import type is not implemented: %s", importType))
 	}
@@ -93,6 +96,40 @@ func (c *FetchMessages) processDeleteProposals(limit int) error {
 			if err := c.Publisher.PublishJSON(context.Background(), ipfs.SubjectMessageCreated, ipfs.MessagePayload{
 				IpfsID: *data.GetIpfs(),
 				Type:   "delete-proposal",
+			}); err != nil {
+				return fmt.Errorf("publish message %d: %w", idx, err)
+			}
+		}
+
+		if len(list) < limit {
+			break
+		}
+
+		offset += limit
+
+		log.Info().Msgf("fetched %d items with offset %d", limit, offset)
+	}
+
+	return nil
+}
+
+func (c *FetchMessages) processDaoUpdateSettings(limit int) error {
+	offset := 0
+	for {
+		list, err := c.Messages.FindDaoUpdateSettings(limit, offset)
+		if err != nil {
+			return fmt.Errorf("find dao update settings: %w", err)
+		}
+
+		for idx, snapshot := range list {
+			var data client.MessageFragment
+			if err := json.Unmarshal([]byte(snapshot), &data); err != nil {
+				return fmt.Errorf("unmarshal dao update settings %d: %w", idx, err)
+			}
+
+			if err := c.Publisher.PublishJSON(context.Background(), ipfs.SubjectMessageCreated, ipfs.MessagePayload{
+				IpfsID: *data.GetIpfs(),
+				Type:   "settings",
 			}); err != nil {
 				return fmt.Errorf("publish message %d: %w", idx, err)
 			}
