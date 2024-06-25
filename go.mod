@@ -10,7 +10,7 @@ require (
 	github.com/Yamashou/gqlgenc v0.14.0
 	github.com/akamensky/argparse v1.4.0
 	github.com/caarlos0/env/v8 v8.0.0
-	github.com/ethereum/go-ethereum v1.13.14
+	github.com/ethereum/go-ethereum v1.13.15
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
