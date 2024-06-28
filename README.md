@@ -5,7 +5,6 @@
 ![golangci-lint](https://github.com/goverland-labs/goverland-datasource-snapshot/workflows/golangci-lint/badge.svg)
 
 Goverland Datasource Snapshot is a micro service designed to manage and synchronize various data sources for Goverland ecosystem.
-At the moment the focus is on Snapshot API.
 The microservice also leverages technologies such as gRPC and NATS.
 PostgreSQL is used as database.
 The application exposes Prometheus metrics.
@@ -13,7 +12,7 @@ The application exposes Prometheus metrics.
 ## Usage
 
 - The application initializes various services and workers to manage proposals, spaces, votes, and messages.
-- Also it implements interface for voting on Snapshot  via gRPC calls.
+- Also it implements interface for voting on Snapshot via gRPC calls.
 
 ## Features
 
