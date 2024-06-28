@@ -1,0 +1,14 @@
+version: '3.9'
+name: goverland-datasource-snapshot-local
+services:
+  datasource:
+    image: "postgres:11"
+    ports:
+      - "11000:11000" # voting gRPC server
+      - "3000:3000" # health check
+      - "2112:2112" # prometheus metrics
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./docker/volumes/db-data/:/var/lib/postgresql/data/

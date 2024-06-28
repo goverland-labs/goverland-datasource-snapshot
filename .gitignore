@@ -4,3 +4,4 @@
 /protocol/bin/*
 /goverland-datasource-snapshot
 /cmd.local
+/docker/volumes/**
