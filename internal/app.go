@@ -26,6 +26,8 @@ import (
 
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/delegate"
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
@@ -240,6 +242,9 @@ func (a *Application) initGrpc() error {
 
 	votingGrpc := voting.NewGrpcServer(a.actionVotingService)
 	votingpb.RegisterVotingServer(grpcServer, votingGrpc)
+
+	delegatesGrpc := delegate.NewGrpcServer()
+	delegatepb.RegisterDelegateServer(grpcServer, delegatesGrpc)
 
 	grpcWorker := grpcsrv.NewGrpcServerWorker("snapshot", grpcServer, a.cfg.InternalAPI.Bind)
 	a.manager.AddWorker(grpcWorker)
