@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package delegatepb;
 
+import "google/protobuf/any.proto";
+
 option go_package = "./delegatepb";
 
 service Delegate {
@@ -9,11 +11,12 @@ service Delegate {
 }
 
 message GetDelegatesRequest {
-  string dao_name = 1;
-  repeated string addresses = 2;
-  string sort = 3;
-  int32 limit = 4;
-  int32 offset = 5;
+  string dao_original_id = 1;
+  google.protobuf.Any strategy = 2;
+  repeated string addresses = 3;
+  string sort = 4;
+  int32 limit = 5;
+  int32 offset = 6;
 }
 
 message GetDelegatesResponse {

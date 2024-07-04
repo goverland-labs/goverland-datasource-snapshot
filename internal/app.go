@@ -243,7 +243,7 @@ func (a *Application) initGrpc() error {
 	votingGrpc := voting.NewGrpcServer(a.actionVotingService)
 	votingpb.RegisterVotingServer(grpcServer, votingGrpc)
 
-	delegatesGrpc := delegate.NewGrpcServer()
+	delegatesGrpc := delegate.NewGrpcServer(delegate.NewService())
 	delegatepb.RegisterDelegateServer(grpcServer, delegatesGrpc)
 
 	grpcWorker := grpcsrv.NewGrpcServerWorker("snapshot", grpcServer, a.cfg.InternalAPI.Bind)
