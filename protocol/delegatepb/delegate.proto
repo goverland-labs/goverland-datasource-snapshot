@@ -26,7 +26,7 @@ message GetDelegatesRequest {
   string dao_original_id = 1;
   google.protobuf.Any strategy = 2;
   repeated string addresses = 3;
-  string sort = 4;
+  optional string sort = 4;
   int32 limit = 5;
   int32 offset = 6;
 }

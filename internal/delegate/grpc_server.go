@@ -26,7 +26,7 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 	delegates, err := g.service.GetDelegates(ctx, GetDelegatesParams{
 		Dao:       req.GetDaoOriginalId(),
 		Strategy:  req.GetStrategy().GetValue(),
-		By:        req.GetSort(),
+		By:        req.Sort,
 		Addresses: req.GetAddresses(),
 		Limit:     int(req.GetLimit()),
 		Offset:    int(req.GetOffset()),

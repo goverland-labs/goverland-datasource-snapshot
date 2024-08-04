@@ -7,7 +7,7 @@ import (
 type GetDelegatesParams struct {
 	Dao       string
 	Strategy  json.RawMessage
-	By        string
+	By        *string
 	Addresses []string
 	Limit     int
 	Offset    int

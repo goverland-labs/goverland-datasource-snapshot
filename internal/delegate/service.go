@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
 )
 
@@ -27,7 +28,7 @@ func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]D
 	topDelegatesReq := gnosis.TopDelegatesRequest{
 		Dao:      req.Dao,
 		Strategy: req.Strategy,
-		By:       req.By,
+		By:       helpers.ValurOrDefault(req.By, "power"),
 		Limit:    req.Limit,
 		Offset:   req.Offset,
 	}
