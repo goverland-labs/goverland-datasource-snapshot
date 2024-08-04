@@ -151,6 +151,8 @@ func (c *FetchMessages) getImportType(args Arguments) (FetchType, error) {
 	switch args.Get("type") {
 	case "delete-proposal":
 		return FetchTypeDeleteProposal, nil
+	case "settings":
+		return FetchUpdateDaoSettings, nil
 	default:
 		return FetchTypeUnspecified, fmt.Errorf("type has wrong format: %s", args.Get("type"))
 	}

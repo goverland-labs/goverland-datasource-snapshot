@@ -8,6 +8,18 @@ option go_package = "./delegatepb";
 
 service Delegate {
   rpc GetDelegates(GetDelegatesRequest) returns (GetDelegatesResponse);
+  rpc GetDelegateProfile(GetDelegateProfileRequest) returns (GetDelegateProfileResponse);
+}
+
+message DelegateEntry {
+  string address = 1;
+  int32 delegator_count = 2;
+  double percent_of_delegators = 3;
+  double votingPower = 4;
+  double percent_of_voting_power = 5;
+  string about = 6;
+  string statement = 7;
+  double user_delegated_voting_power = 8;
 }
 
 message GetDelegatesRequest {
@@ -23,13 +35,24 @@ message GetDelegatesResponse {
   repeated DelegateEntry delegates = 1;
 }
 
-message DelegateEntry {
+message GetDelegateProfileRequest {
+  string dao_original_id = 1;
+  string address = 2;
+  google.protobuf.Any strategy = 3;
+}
+
+message GetDelegateProfileResponse {
   string address = 1;
-  int32 delegator_count = 2;
-  int32 percent_of_delegators = 3; // in basis points
-  double votingPower = 4;
-  int32 percent_of_voting_power = 5; // in basis points
-  string about = 6;
-  string statement = 7;
-  double user_delegated_voting_power = 8;
+  double votingPower = 2;
+  double incoming_power = 3;
+  double outgoing_power = 4;
+  double percent_of_voting_power = 5;
+  double percent_of_delegators = 6;
+  repeated ProfileDelegateItem delegates = 7;
+}
+
+message ProfileDelegateItem {
+  string address = 1;
+  double percent_of_weight = 2;
+  double delegated_power = 3;
 }

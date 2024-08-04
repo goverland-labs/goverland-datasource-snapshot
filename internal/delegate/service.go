@@ -1,88 +1,107 @@
 package delegate
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"strconv"
+
+	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
 )
 
 type Service struct {
+	gnosisSDK *gnosis.SDK
 }
 
-func NewService() *Service {
-	return &Service{}
+func NewService(gnosisSDK *gnosis.SDK) *Service {
+	return &Service{gnosisSDK: gnosisSDK}
 }
 
-func (s *Service) GetDelegates(req GetDelegatesRequest) ([]Delegate, error) {
-	url := fmt.Sprintf("https://delegate-api.gnosisguild.org/api/v1/%s/delegates", req.Dao)
-	queryParams := map[string]string{
-		"by":     req.By,
-		"limit":  strconv.Itoa(req.Limit),
-		"offset": strconv.Itoa(req.Offset),
+func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]Delegate, error) {
+	if len(req.Addresses) > 1 {
+		return nil, fmt.Errorf("for now only one query address is supported")
 	}
 
-	jsonResp, err := s.doPostHttpRequest(url, queryParams, GnosisTopDelegatesBodyRequest{
+	if len(req.Addresses) == 1 {
+		return s.searchDelegateProfile(req)
+	}
+
+	topDelegatesReq := gnosis.TopDelegatesRequest{
+		Dao:      req.Dao,
 		Strategy: req.Strategy,
-	})
+		By:       req.By,
+		Limit:    req.Limit,
+		Offset:   req.Offset,
+	}
+
+	topDelegatesResp, err := s.gnosisSDK.GetTopDelegates(ctx, topDelegatesReq)
 	if err != nil {
 		return nil, err
 	}
 
-	var resp GnosisTopDelegatesResponse
-	if err := json.Unmarshal(jsonResp, &resp); err != nil {
-		return nil, err
-	}
-
-	delegates := make([]Delegate, 0, len(resp.Delegates))
-	for _, d := range resp.Delegates {
+	delegates := make([]Delegate, 0, len(topDelegatesResp.Delegates))
+	for _, d := range topDelegatesResp.Delegates {
 		delegates = append(delegates, Delegate{
 			Address:              d.Address,
 			DelegatorCount:       d.DelegatorCount,
-			PercentOfDelegators:  d.PercentOfDelegators,
+			PercentOfDelegators:  basisPointToPercentage(d.PercentOfDelegators),
 			VotingPower:          d.VotingPower,
-			PercentOfVotingPower: d.PercentOfVotingPower,
+			PercentOfVotingPower: basisPointToPercentage(d.PercentOfVotingPower),
 		})
 	}
 
 	return delegates, nil
 }
 
-func (s *Service) doPostHttpRequest(url string, queryParams map[string]string, bodyParams any) ([]byte, error) {
-	reqParams, err := json.Marshal(bodyParams)
+func (s *Service) GetDelegateProfile(ctx context.Context, req GetDelegateProfileParams) (DelegateProfile, error) {
+	delegateProfileReq := gnosis.DelegateProfileRequest{
+		Dao:      req.Dao,
+		Strategy: req.Strategy,
+		Address:  req.Address,
+	}
+
+	delegateProfileResp, err := s.gnosisSDK.GetDelegateProfile(ctx, delegateProfileReq)
 	if err != nil {
-		return nil, err
+		return DelegateProfile{}, fmt.Errorf("failed to get delegation profile: %w", err)
 	}
 
-	r, err := http.NewRequest("POST", url, bytes.NewBuffer(reqParams))
+	profile := DelegateProfile{
+		Address:              delegateProfileResp.Address,
+		VotingPower:          delegateProfileResp.VotingPower,
+		IncomingPower:        delegateProfileResp.IncomingPower,
+		OutgoingPower:        delegateProfileResp.OutgoingPower,
+		PercentOfVotingPower: basisPointToPercentage(delegateProfileResp.PercentOfVotingPower),
+		PercentOfDelegators:  basisPointToPercentage(delegateProfileResp.PercentOfDelegators),
+	}
+
+	for _, d := range delegateProfileResp.DelegateTree {
+		profile.Delegates = append(profile.Delegates, ProfileDelegateItem{
+			Address:         d.Delegate,
+			PercentOfWeight: basisPointToPercentage(d.Weight),
+			DelegatedPower:  d.DelegatedPower,
+		})
+	}
+
+	return profile, nil
+}
+
+func (s *Service) searchDelegateProfile(req GetDelegatesParams) ([]Delegate, error) {
+	delegateProfileReq := gnosis.DelegateProfileRequest{
+		Dao:      req.Dao,
+		Strategy: req.Strategy,
+		Address:  req.Addresses[0],
+	}
+
+	delegateProfileResp, err := s.gnosisSDK.GetDelegateProfile(nil, delegateProfileReq)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get delegation profile: %w", err)
 	}
 
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Accept", "application/json")
-
-	q := r.URL.Query()
-	for k, v := range queryParams {
-		q.Add(k, v)
-	}
-	r.URL.RawQuery = q.Encode()
-
-	res, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	content, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed: %s", string(content))
-	}
-
-	return content, nil
+	return []Delegate{
+		{
+			Address:              delegateProfileResp.Address,
+			DelegatorCount:       int32(len(delegateProfileResp.Delegators)),
+			PercentOfDelegators:  basisPointToPercentage(delegateProfileResp.PercentOfDelegators),
+			VotingPower:          delegateProfileResp.VotingPower,
+			PercentOfVotingPower: basisPointToPercentage(delegateProfileResp.PercentOfVotingPower),
+		},
+	}, nil
 }

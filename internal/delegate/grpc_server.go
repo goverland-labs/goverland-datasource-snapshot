@@ -23,10 +23,9 @@ func NewGrpcServer(s *Service) *GrpcServer {
 }
 
 func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelegatesRequest) (*delegatepb.GetDelegatesResponse, error) {
-	strategy := req.GetStrategy().GetValue()
-	delegates, err := g.service.GetDelegates(GetDelegatesRequest{
+	delegates, err := g.service.GetDelegates(ctx, GetDelegatesParams{
 		Dao:       req.GetDaoOriginalId(),
-		Strategy:  strategy,
+		Strategy:  req.GetStrategy().GetValue(),
 		By:        req.GetSort(),
 		Addresses: req.GetAddresses(),
 		Limit:     int(req.GetLimit()),
@@ -57,5 +56,41 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 
 	return &delegatepb.GetDelegatesResponse{
 		Delegates: delegatesResult,
+	}, nil
+}
+
+func (g *GrpcServer) GetDelegateProfile(ctx context.Context, req *delegatepb.GetDelegateProfileRequest) (*delegatepb.GetDelegateProfileResponse, error) {
+	profile, err := g.service.GetDelegateProfile(ctx, GetDelegateProfileParams{
+		Dao:      req.GetDaoOriginalId(),
+		Strategy: req.GetStrategy().GetValue(),
+		Address:  req.GetAddress(),
+	})
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("dao", req.DaoOriginalId).
+			Str("address", req.Address).
+			Msg("failed to get delegate profile")
+
+		return nil, status.Errorf(codes.Internal, "failed to get delegate profile: %v", err)
+	}
+
+	delegates := make([]*delegatepb.ProfileDelegateItem, 0, len(profile.Delegates))
+	for _, d := range profile.Delegates {
+		delegates = append(delegates, &delegatepb.ProfileDelegateItem{
+			Address:         d.Address,
+			PercentOfWeight: d.PercentOfWeight,
+			DelegatedPower:  d.DelegatedPower,
+		})
+	}
+
+	return &delegatepb.GetDelegateProfileResponse{
+		Address:              profile.Address,
+		VotingPower:          profile.VotingPower,
+		IncomingPower:        profile.IncomingPower,
+		OutgoingPower:        profile.OutgoingPower,
+		PercentOfVotingPower: profile.PercentOfVotingPower,
+		PercentOfDelegators:  profile.PercentOfDelegators,
+		Delegates:            delegates,
 	}, nil
 }
