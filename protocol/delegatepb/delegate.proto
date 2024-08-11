@@ -15,7 +15,7 @@ message DelegateEntry {
   string address = 1;
   int32 delegator_count = 2;
   double percent_of_delegators = 3;
-  double votingPower = 4;
+  double voting_power = 4;
   double percent_of_voting_power = 5;
   string about = 6;
   string statement = 7;
@@ -42,7 +42,7 @@ message GetDelegateProfileRequest {
 
 message GetDelegateProfileResponse {
   string address = 1;
-  double votingPower = 2;
+  double voting_power = 2;
   double incoming_power = 3;
   double outgoing_power = 4;
   double percent_of_voting_power = 5;
