@@ -43,14 +43,13 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 	delegatesResult := make([]*delegatepb.DelegateEntry, 0, len(delegates))
 	for _, d := range delegates {
 		delegatesResult = append(delegatesResult, &delegatepb.DelegateEntry{
-			Address:                  d.Address,
-			DelegatorCount:           d.DelegatorCount,
-			PercentOfDelegators:      d.PercentOfDelegators,
-			VotingPower:              d.VotingPower,
-			PercentOfVotingPower:     d.PercentOfVotingPower,
-			About:                    "test about",
-			Statement:                "test statement",
-			UserDelegatedVotingPower: 0,
+			Address:              d.Address,
+			DelegatorCount:       d.DelegatorCount,
+			PercentOfDelegators:  d.PercentOfDelegators,
+			VotingPower:          d.VotingPower,
+			PercentOfVotingPower: d.PercentOfVotingPower,
+			About:                "test about",
+			Statement:            "test statement",
 		})
 	}
 
@@ -78,9 +77,9 @@ func (g *GrpcServer) GetDelegateProfile(ctx context.Context, req *delegatepb.Get
 	delegates := make([]*delegatepb.ProfileDelegateItem, 0, len(profile.Delegates))
 	for _, d := range profile.Delegates {
 		delegates = append(delegates, &delegatepb.ProfileDelegateItem{
-			Address:         d.Address,
-			PercentOfWeight: d.PercentOfWeight,
-			DelegatedPower:  d.DelegatedPower,
+			Address:        d.Address,
+			Weight:         d.Weight,
+			DelegatedPower: d.DelegatedPower,
 		})
 	}
 

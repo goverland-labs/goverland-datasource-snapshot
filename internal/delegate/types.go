@@ -38,7 +38,7 @@ type DelegateProfile struct {
 }
 
 type ProfileDelegateItem struct {
-	Address         string  `json:"address"`
-	PercentOfWeight float64 `json:"percent_of_weight"`
-	DelegatedPower  float64 `json:"delegated_power"`
+	Address        string  `json:"address"`
+	Weight         float64 `json:"weight"`
+	DelegatedPower float64 `json:"delegated_power"`
 }

@@ -19,7 +19,6 @@ message DelegateEntry {
   double percent_of_voting_power = 5;
   string about = 6;
   string statement = 7;
-  double user_delegated_voting_power = 8;
 }
 
 message GetDelegatesRequest {
@@ -53,6 +52,6 @@ message GetDelegateProfileResponse {
 
 message ProfileDelegateItem {
   string address = 1;
-  double percent_of_weight = 2;
+  double weight = 2;
   double delegated_power = 3;
 }

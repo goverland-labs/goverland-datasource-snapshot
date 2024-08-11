@@ -22,7 +22,7 @@ func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]D
 	}
 
 	if len(req.Addresses) == 1 {
-		return s.searchDelegateProfile(req)
+		return s.searchDelegateProfile(ctx, req)
 	}
 
 	topDelegatesReq := gnosis.TopDelegatesRequest{
@@ -75,23 +75,23 @@ func (s *Service) GetDelegateProfile(ctx context.Context, req GetDelegateProfile
 
 	for _, d := range delegateProfileResp.DelegateTree {
 		profile.Delegates = append(profile.Delegates, ProfileDelegateItem{
-			Address:         d.Delegate,
-			PercentOfWeight: basisPointToPercentage(d.Weight),
-			DelegatedPower:  d.DelegatedPower,
+			Address:        d.Delegate,
+			Weight:         d.Weight,
+			DelegatedPower: d.DelegatedPower,
 		})
 	}
 
 	return profile, nil
 }
 
-func (s *Service) searchDelegateProfile(req GetDelegatesParams) ([]Delegate, error) {
+func (s *Service) searchDelegateProfile(ctx context.Context, req GetDelegatesParams) ([]Delegate, error) {
 	delegateProfileReq := gnosis.DelegateProfileRequest{
 		Dao:      req.Dao,
 		Strategy: req.Strategy,
 		Address:  req.Addresses[0],
 	}
 
-	delegateProfileResp, err := s.gnosisSDK.GetDelegateProfile(nil, delegateProfileReq)
+	delegateProfileResp, err := s.gnosisSDK.GetDelegateProfile(ctx, delegateProfileReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get delegation profile: %w", err)
 	}
