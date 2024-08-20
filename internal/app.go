@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Yamashou/gqlgenc/clientv2"
+	"github.com/goverland-labs/goverland-ipfs-fetcher/protocol/ipfsfetcherpb"
 	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	grcpprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -17,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/s-larionov/process-manager"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -24,6 +27,8 @@ import (
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/delegate"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
@@ -249,35 +254,35 @@ func (a *Application) initGrpc() error {
 }
 
 func (a *Application) initUpdatesWorkers() error {
-	//spacesUpdater := updates.NewSpacesUpdater(a.sdk, a.spacesService)
-	//proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
-	//activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
-	//spaces := updates.NewSpacesWorker(spacesUpdater, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
-	//votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
-	//messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
-	//
-	//conn, err := grpc.Dial(
-	//	a.cfg.InternalAPI.IpfsFetcherAddress,
-	//	grpc.WithTransportCredentials(insecure.NewCredentials()),
-	//)
-	//if err != nil {
-	//	return fmt.Errorf("create connection with ipfs fetcher server: %v", err)
-	//}
-	//
-	//fc := ipfsfetcherpb.NewMessageClient(conn)
-	//fetcherWrapper := fetcher.NewClient(fc)
-	//deleteProposals := updates.NewDeleteProposalConsumer(a.proposalsService, fetcherWrapper, a.natsConn)
-	//
-	//updateSpaceConsumer := updates.NewUpdateSpaceSettingsConsumer(spacesUpdater, fetcherWrapper, a.natsConn)
+	spacesUpdater := updates.NewSpacesUpdater(a.sdk, a.spacesService)
+	proposals := updates.NewProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsCheckInterval)
+	activeProposals := updates.NewActiveProposalsWorker(a.sdk, a.proposalsService, a.cfg.Snapshot.ProposalsUpdatesInterval)
+	spaces := updates.NewSpacesWorker(spacesUpdater, a.spacesService, a.cfg.Snapshot.UnknownSpacesCheckInterval)
+	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
+	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 
-	//a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	//a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	//a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	//a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	//a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	//a.manager.AddWorker(process.NewCallbackWorker("snapshot messages updates", messages.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	//a.manager.AddWorker(process.NewCallbackWorker("delete-proposal-consumer", deleteProposals.Start))
-	//a.manager.AddWorker(process.NewCallbackWorker("update-space-settings-consumer", updateSpaceConsumer.Start))
+	conn, err := grpc.Dial(
+		a.cfg.InternalAPI.IpfsFetcherAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with ipfs fetcher server: %v", err)
+	}
+
+	fc := ipfsfetcherpb.NewMessageClient(conn)
+	fetcherWrapper := fetcher.NewClient(fc)
+	deleteProposals := updates.NewDeleteProposalConsumer(a.proposalsService, fetcherWrapper, a.natsConn)
+
+	updateSpaceConsumer := updates.NewUpdateSpaceSettingsConsumer(spacesUpdater, fetcherWrapper, a.natsConn)
+	//
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot messages updates", messages.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("delete-proposal-consumer", deleteProposals.Start))
+	a.manager.AddWorker(process.NewCallbackWorker("update-space-settings-consumer", updateSpaceConsumer.Start))
 
 	return nil
 }
