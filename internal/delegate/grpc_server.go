@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
 )
@@ -83,6 +84,10 @@ func (g *GrpcServer) GetDelegateProfile(ctx context.Context, req *delegatepb.Get
 		})
 	}
 
+	var expiration *timestamppb.Timestamp
+	if profile.Expiration != nil {
+		expiration = timestamppb.New(*profile.Expiration)
+	}
 	return &delegatepb.GetDelegateProfileResponse{
 		Address:              profile.Address,
 		VotingPower:          profile.VotingPower,
@@ -91,5 +96,6 @@ func (g *GrpcServer) GetDelegateProfile(ctx context.Context, req *delegatepb.Get
 		PercentOfVotingPower: profile.PercentOfVotingPower,
 		PercentOfDelegators:  profile.PercentOfDelegators,
 		Delegates:            delegates,
+		Expiration:           expiration,
 	}, nil
 }

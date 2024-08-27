@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package delegatepb;
 
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "./delegatepb";
@@ -48,6 +49,7 @@ message GetDelegateProfileResponse {
   double percent_of_voting_power = 5;
   double percent_of_delegators = 6;
   repeated ProfileDelegateItem delegates = 7;
+  google.protobuf.Timestamp expiration = 8;
 }
 
 message ProfileDelegateItem {

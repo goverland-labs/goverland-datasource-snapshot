@@ -76,9 +76,10 @@ type DelegateProfileResponse struct {
 }
 
 type DelegateTreeItem struct {
-	Delegate       string  `json:"delegate"`
-	Weight         float64 `json:"weight"`
-	DelegatedPower float64 `json:"delegatedPower"`
+	Delegate           string  `json:"delegate"`
+	Weight             float64 `json:"weight"`
+	DelegatedPower     float64 `json:"delegatedPower"`
+	ExpirationUnixTime int     `json:"expiration"`
 }
 
 type DelegatorTreeItem struct {

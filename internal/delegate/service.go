@@ -3,6 +3,7 @@ package delegate
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
@@ -64,6 +65,20 @@ func (s *Service) GetDelegateProfile(ctx context.Context, req GetDelegateProfile
 		return DelegateProfile{}, fmt.Errorf("failed to get delegation profile: %w", err)
 	}
 
+	var expiration *time.Time
+	delegates := make([]ProfileDelegateItem, 0, len(delegateProfileResp.DelegateTree))
+	for _, d := range delegateProfileResp.DelegateTree {
+		delegates = append(delegates, ProfileDelegateItem{
+			Address:        d.Delegate,
+			Weight:         d.Weight,
+			DelegatedPower: d.DelegatedPower,
+		})
+
+		if d.ExpirationUnixTime != 0 {
+			expiration = helpers.Ptr(time.Unix(int64(d.ExpirationUnixTime), 0))
+		}
+	}
+
 	profile := DelegateProfile{
 		Address:              delegateProfileResp.Address,
 		VotingPower:          delegateProfileResp.VotingPower,
@@ -71,14 +86,8 @@ func (s *Service) GetDelegateProfile(ctx context.Context, req GetDelegateProfile
 		OutgoingPower:        delegateProfileResp.OutgoingPower,
 		PercentOfVotingPower: basisPointToPercentage(delegateProfileResp.PercentOfVotingPower),
 		PercentOfDelegators:  basisPointToPercentage(delegateProfileResp.PercentOfDelegators),
-	}
-
-	for _, d := range delegateProfileResp.DelegateTree {
-		profile.Delegates = append(profile.Delegates, ProfileDelegateItem{
-			Address:        d.Delegate,
-			Weight:         d.Weight,
-			DelegatedPower: d.DelegatedPower,
-		})
+		Delegates:            delegates,
+		Expiration:           expiration,
 	}
 
 	return profile, nil

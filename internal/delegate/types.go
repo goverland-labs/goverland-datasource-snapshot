@@ -2,6 +2,7 @@ package delegate
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type GetDelegatesParams struct {
@@ -35,6 +36,7 @@ type DelegateProfile struct {
 	PercentOfVotingPower float64               `json:"percent_of_voting_power"`
 	PercentOfDelegators  float64               `json:"percent_of_delegators"`
 	Delegates            []ProfileDelegateItem `json:"delegates"`
+	Expiration           *time.Time            `json:"expiration"`
 }
 
 type ProfileDelegateItem struct {
