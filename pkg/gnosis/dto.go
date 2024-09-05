@@ -28,38 +28,6 @@ type TopDelegatesResponse struct {
 	Delegates   []Delegate `json:"delegates"`
 }
 
-//	{
-//	 "chainId": "1",
-//	 "blockNumber": "19947439",
-//	 "address": "0x37F1eE65C2F8610741cd9Dff1057F926809C4078",
-//	 "votingPower": 21.41231,
-//	 "incomingPower": 21.41231,
-//	 "outgoingPower": 10.00000,
-//	 "percentOfVotingPower": 211,
-//	 "percentOfDelegators": 600,
-//	 delegators: [
-//	   "0x485E60C486671E932fd9C53d4110cdEab1E7F0eb"
-//	 ],
-//	 delegatorTree [
-//	   {
-//	     "delegator": "0x485E60C486671E932fd9C53d4110cdEab1E7F0eb",
-//	     "weight": 10000,
-//	     "delegatedPower": 21.71540506,
-//	     "parents": []
-//	   }
-//	 ],
-//	 delegates [
-//	   "0xD476B79539781e499396761CE7e21ab28AeA828F"
-//	 ],
-//	 delegateTree [
-//	   {
-//	     "delegate": "0xD476B79539781e499396761CE7e21ab28AeA828F",
-//	     "weight": 5000,
-//	     "delegatedPower": 10.00000,
-//	     "children": []
-//	   }
-//	 ],
-//	}
 type DelegateProfileResponse struct {
 	BlockNumber          int64               `json:"blockNumber"`
 	ChainID              int64               `json:"chainId"`

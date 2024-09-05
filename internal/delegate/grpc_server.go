@@ -49,8 +49,6 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 			PercentOfDelegators:  d.PercentOfDelegators,
 			VotingPower:          d.VotingPower,
 			PercentOfVotingPower: d.PercentOfVotingPower,
-			About:                "test about",
-			Statement:            "test statement",
 		})
 	}
 

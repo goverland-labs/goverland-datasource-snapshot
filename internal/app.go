@@ -274,7 +274,7 @@ func (a *Application) initUpdatesWorkers() error {
 	deleteProposals := updates.NewDeleteProposalConsumer(a.proposalsService, fetcherWrapper, a.natsConn)
 
 	updateSpaceConsumer := updates.NewUpdateSpaceSettingsConsumer(spacesUpdater, fetcherWrapper, a.natsConn)
-	//
+
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
