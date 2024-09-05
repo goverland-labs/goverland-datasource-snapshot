@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
 )
 
@@ -97,7 +98,7 @@ func TestService_GetDelegates(t *testing.T) {
 				req: GetDelegatesParams{
 					Dao:       "safe.ggtest.eth",
 					Strategy:  msJson,
-					By:        "power",
+					By:        helpers.Ptr("power"),
 					Addresses: nil,
 					Limit:     20,
 					Offset:    0,

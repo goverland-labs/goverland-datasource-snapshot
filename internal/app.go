@@ -261,7 +261,7 @@ func (a *Application) initUpdatesWorkers() error {
 	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
 	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 
-	conn, err := grpc.Dial(
+	conn, err := grpc.NewClient(
 		a.cfg.InternalAPI.IpfsFetcherAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
