@@ -7,14 +7,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog/log"
+
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/metrics"
 )
 
 type commonHTTP struct {
 }
 
-func (h *commonHTTP) doPostHttpRequest(ctx context.Context, url string, queryParams map[string]string, bodyParams any) ([]byte, error) {
+func (h *commonHTTP) doPostHttpRequest(ctx context.Context, url string, queryParams map[string]string, bodyParams any) (resp []byte, err error) {
+	defer func(start time.Time) {
+		metrics.CollectRequestsMetric("gnosis", url, err, start)
+	}(time.Now())
+
 	reqParams, err := json.Marshal(bodyParams)
 	if err != nil {
 		return nil, err
