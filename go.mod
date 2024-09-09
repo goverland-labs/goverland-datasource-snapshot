@@ -11,7 +11,7 @@ require (
 	github.com/akamensky/argparse v1.4.0
 	github.com/caarlos0/env/v8 v8.0.0
 	github.com/ethereum/go-ethereum v1.13.14
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-datasource-snapshot/protocol v0.0.0
@@ -30,7 +30,8 @@ require (
 	github.com/shutter-network/shutter/shlib v0.1.11
 	github.com/smartystreets/goconvey v1.8.0
 	github.com/vektah/gqlparser/v2 v2.5.3
-	google.golang.org/grpc v1.62.0
+	google.golang.org/grpc v1.65.0
+	google.golang.org/protobuf v1.34.1
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.2
 )
@@ -38,7 +39,7 @@ require (
 require (
 	github.com/99designs/gqlgen v0.17.33 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/holiman/uint256 v1.2.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -57,11 +58,10 @@ require (
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/smartystreets/assertions v1.13.1 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
-	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 )

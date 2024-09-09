@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package delegatepb;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "./delegatepb";
+
+service Delegate {
+  rpc GetDelegates(GetDelegatesRequest) returns (GetDelegatesResponse);
+  rpc GetDelegateProfile(GetDelegateProfileRequest) returns (GetDelegateProfileResponse);
+}
+
+message DelegateEntry {
+  string address = 1;
+  int32 delegator_count = 2;
+  double percent_of_delegators = 3;
+  double voting_power = 4;
+  double percent_of_voting_power = 5;
+  string about = 6;
+  string statement = 7;
+}
+
+message GetDelegatesRequest {
+  string dao_original_id = 1;
+  google.protobuf.Any strategy = 2;
+  repeated string addresses = 3;
+  optional string sort = 4;
+  int32 limit = 5;
+  int32 offset = 6;
+}
+
+message GetDelegatesResponse {
+  repeated DelegateEntry delegates = 1;
+}
+
+message GetDelegateProfileRequest {
+  string dao_original_id = 1;
+  string address = 2;
+  google.protobuf.Any strategy = 3;
+}
+
+message GetDelegateProfileResponse {
+  string address = 1;
+  double voting_power = 2;
+  double incoming_power = 3;
+  double outgoing_power = 4;
+  double percent_of_voting_power = 5;
+  double percent_of_delegators = 6;
+  repeated ProfileDelegateItem delegates = 7;
+  google.protobuf.Timestamp expiration = 8;
+}
+
+message ProfileDelegateItem {
+  string address = 1;
+  double weight = 2;
+  double delegated_power = 3;
+}

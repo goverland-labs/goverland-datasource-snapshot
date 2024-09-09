@@ -26,13 +26,16 @@ import (
 
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/delegate"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
+	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
-	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/metrics"
-	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/voting"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/grpcsrv"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/health"
@@ -241,6 +244,9 @@ func (a *Application) initGrpc() error {
 	votingGrpc := voting.NewGrpcServer(a.actionVotingService)
 	votingpb.RegisterVotingServer(grpcServer, votingGrpc)
 
+	delegatesGrpc := delegate.NewGrpcServer(delegate.NewService(gnosis.NewSDK()))
+	delegatepb.RegisterDelegateServer(grpcServer, delegatesGrpc)
+
 	grpcWorker := grpcsrv.NewGrpcServerWorker("snapshot", grpcServer, a.cfg.InternalAPI.Bind)
 	a.manager.AddWorker(grpcWorker)
 
@@ -255,7 +261,7 @@ func (a *Application) initUpdatesWorkers() error {
 	votes := updates.NewVotesWorker(a.sdk, a.votesService, a.proposalsService, a.messagesService, a.cfg.Snapshot.VotesCheckInterval)
 	messages := updates.NewMessagesWorker(a.sdk, a.messagesService, a.cfg.Snapshot.MessagesCheckInterval)
 
-	conn, err := grpc.Dial(
+	conn, err := grpc.NewClient(
 		a.cfg.InternalAPI.IpfsFetcherAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
