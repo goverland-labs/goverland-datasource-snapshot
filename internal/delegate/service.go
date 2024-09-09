@@ -18,10 +18,6 @@ func NewService(gnosisSDK *gnosis.SDK) *Service {
 }
 
 func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]Delegate, error) {
-	if len(req.Addresses) > 1 {
-		return nil, fmt.Errorf("for now only one query address is supported")
-	}
-
 	if len(req.Addresses) == 1 {
 		return s.searchDelegateProfile(ctx, req)
 	}

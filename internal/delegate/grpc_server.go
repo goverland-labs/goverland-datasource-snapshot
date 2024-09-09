@@ -24,6 +24,10 @@ func NewGrpcServer(s *Service) *GrpcServer {
 }
 
 func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelegatesRequest) (*delegatepb.GetDelegatesResponse, error) {
+	if len(req.Addresses) > 1 {
+		return nil, status.Error(codes.InvalidArgument, "only one address can be queried at a time")
+	}
+
 	delegates, err := g.service.GetDelegates(ctx, GetDelegatesParams{
 		Dao:       req.GetDaoOriginalId(),
 		Strategy:  req.GetStrategy().GetValue(),
