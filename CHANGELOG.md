@@ -7,9 +7,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1] - 2024-09-13
+
+### Added
+- Added github actions for building docker image
+
+## [0.6.0] - 2024-09-09
+
 ### Added
 - Added proxy api for delegates
-- Added github actions for building docker image
 
 ## [0.5.4] - 2024-06-28
 
