@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Added proxy api for delegates
+- Added github actions for building docker image
 
 ## [0.5.4] - 2024-06-28
 
