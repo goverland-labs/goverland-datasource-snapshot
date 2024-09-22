@@ -26,6 +26,13 @@ type TopDelegatesResponse struct {
 	BlockNumber int64      `json:"blockNumber"`
 	ChainID     int64      `json:"chainId"`
 	Delegates   []Delegate `json:"delegates"`
+	Pagination  Pagination `json:"pagination"`
+}
+
+type Pagination struct {
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
+	Total  int `json:"total"`
 }
 
 type DelegateProfileResponse struct {

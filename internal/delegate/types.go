@@ -14,6 +14,11 @@ type GetDelegatesParams struct {
 	Offset    int
 }
 
+type DelegatesWrapper struct {
+	Delegates []Delegate `json:"delegates"`
+	Total     int        `json:"total"`
+}
+
 type Delegate struct {
 	Address              string  `json:"address"`
 	DelegatorCount       int32   `json:"delegator_count"`
