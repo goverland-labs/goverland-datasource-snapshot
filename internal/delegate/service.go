@@ -17,7 +17,7 @@ func NewService(gnosisSDK *gnosis.SDK) *Service {
 	return &Service{gnosisSDK: gnosisSDK}
 }
 
-func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]Delegate, error) {
+func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) (DelegatesWrapper, error) {
 	if len(req.Addresses) == 1 {
 		return s.searchDelegateProfile(ctx, req)
 	}
@@ -32,7 +32,7 @@ func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]D
 
 	topDelegatesResp, err := s.gnosisSDK.GetTopDelegates(ctx, topDelegatesReq)
 	if err != nil {
-		return nil, err
+		return DelegatesWrapper{}, err
 	}
 
 	delegates := make([]Delegate, 0, len(topDelegatesResp.Delegates))
@@ -46,7 +46,10 @@ func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) ([]D
 		})
 	}
 
-	return delegates, nil
+	return DelegatesWrapper{
+		Delegates: delegates,
+		Total:     topDelegatesResp.Pagination.Total,
+	}, nil
 }
 
 func (s *Service) GetDelegateProfile(ctx context.Context, req GetDelegateProfileParams) (DelegateProfile, error) {
@@ -89,7 +92,7 @@ func (s *Service) GetDelegateProfile(ctx context.Context, req GetDelegateProfile
 	return profile, nil
 }
 
-func (s *Service) searchDelegateProfile(ctx context.Context, req GetDelegatesParams) ([]Delegate, error) {
+func (s *Service) searchDelegateProfile(ctx context.Context, req GetDelegatesParams) (DelegatesWrapper, error) {
 	delegateProfileReq := gnosis.DelegateProfileRequest{
 		Dao:      req.Dao,
 		Strategy: req.Strategy,
@@ -98,10 +101,10 @@ func (s *Service) searchDelegateProfile(ctx context.Context, req GetDelegatesPar
 
 	delegateProfileResp, err := s.gnosisSDK.GetDelegateProfile(ctx, delegateProfileReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get delegation profile: %w", err)
+		return DelegatesWrapper{}, fmt.Errorf("failed to get delegation profile: %w", err)
 	}
 
-	return []Delegate{
+	delegates := []Delegate{
 		{
 			Address:              delegateProfileResp.Address,
 			DelegatorCount:       int32(len(delegateProfileResp.Delegators)),
@@ -109,5 +112,10 @@ func (s *Service) searchDelegateProfile(ctx context.Context, req GetDelegatesPar
 			VotingPower:          delegateProfileResp.VotingPower,
 			PercentOfVotingPower: basisPointToPercentage(delegateProfileResp.PercentOfVotingPower),
 		},
+	}
+
+	return DelegatesWrapper{
+		Delegates: delegates,
+		Total:     1,
 	}, nil
 }

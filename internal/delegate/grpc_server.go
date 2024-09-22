@@ -28,7 +28,7 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 		return nil, status.Error(codes.InvalidArgument, "only one address can be queried at a time")
 	}
 
-	delegates, err := g.service.GetDelegates(ctx, GetDelegatesParams{
+	delegatesWrapper, err := g.service.GetDelegates(ctx, GetDelegatesParams{
 		Dao:       req.GetDaoOriginalId(),
 		Strategy:  req.GetStrategy().GetValue(),
 		By:        req.Sort,
@@ -45,8 +45,8 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 		return nil, status.Errorf(codes.Internal, "failed to get delegates: %v", err)
 	}
 
-	delegatesResult := make([]*delegatepb.DelegateEntry, 0, len(delegates))
-	for _, d := range delegates {
+	delegatesResult := make([]*delegatepb.DelegateEntry, 0, len(delegatesWrapper.Delegates))
+	for _, d := range delegatesWrapper.Delegates {
 		delegatesResult = append(delegatesResult, &delegatepb.DelegateEntry{
 			Address:              d.Address,
 			DelegatorCount:       d.DelegatorCount,
@@ -58,6 +58,7 @@ func (g *GrpcServer) GetDelegates(ctx context.Context, req *delegatepb.GetDelega
 
 	return &delegatepb.GetDelegatesResponse{
 		Delegates: delegatesResult,
+		Total:     int32(delegatesWrapper.Total),
 	}, nil
 }
 
