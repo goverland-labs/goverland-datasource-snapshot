@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -173,7 +172,6 @@ func convertVpByStrategy(data []*float64) []float64 {
 }
 
 func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFragment *client.ProposalFragment) (validateVPResult, error) {
-	snapshotNum := getSnapshot(pFragment.Snapshot)
 	params := snapshot.GetVotingPowerParams{
 		Voter:    validateParams.Voter,
 		Space:    pFragment.Space.ID,
@@ -190,7 +188,7 @@ func (a *ActionService) validateVotingPower(validateParams ValidateParams, pFrag
 		return validateVPResult{
 			validation: validation{
 				ok:              false,
-				ValidationError: NoVotingPowerErr.WithVars(fmt.Sprintf("%v", snapshotNum)),
+				ValidationError: NoVotingPowerErr.WithVars(fmt.Sprintf("%v", pFragment.Snapshot)),
 			},
 		}, nil
 	}
@@ -308,17 +306,10 @@ func getPassportGatedParams(fragment *client.ProposalFragment) (string, string, 
 	return operator, strings.Join(stamps, ", "), scoreThresholdResult
 }
 
-func getSnapshot(snapshot *string) any {
+func getSnapshot(snapshot *int64) any {
 	if snapshot == nil {
 		return latestSnapshot
 	}
 
-	numSnapshot, err := strconv.Atoi(*snapshot)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to convert snapshot to int")
-
-		return latestSnapshot
-	}
-
-	return numSnapshot
+	return *snapshot
 }

@@ -199,7 +199,6 @@ func (c *Import) processProposal(line []string, ttl *time.Duration) error {
 		End:           getUnixFromString(line[16]),
 		Quorum:        getFloat64FromString(line[18]),
 		Privacy:       helpers.Ptr(line[19]),
-		Snapshot:      helpers.Ptr(line[20]),
 		State:         helpers.Ptr(line[24]),
 		Link:          helpers.Ptr(fmt.Sprintf("https://snapshot.org/#/%s/proposal/%s", line[4], line[0])),
 		App:           helpers.Ptr(line[21]),
