@@ -64,8 +64,8 @@ github.com/goverland-labs/goverland-ipfs-fetcher/protocol v0.0.1 h1:g2726cbFsmrX
 github.com/goverland-labs/goverland-ipfs-fetcher/protocol v0.0.1/go.mod h1:H6Ovs53Sikm45dYUog+ZC6g73zHl2jBmZ2OmFtXN8EI=
 github.com/goverland-labs/goverland-platform-events v0.2.3 h1:K1k+eZMDmU+3P8vH1gflespIdGjde40bRxABOyeiaqI=
 github.com/goverland-labs/goverland-platform-events v0.2.3/go.mod h1:0/131HTR3cue1cDBVIoJ/iwgA+8f5MDQC8mUiqnouzE=
-github.com/goverland-labs/snapshot-sdk-go v0.4.1 h1:ztjAgata2T6ZOBcKSTDzAag4yVgPvKQTui4MKVR7InU=
-github.com/goverland-labs/snapshot-sdk-go v0.4.1/go.mod h1:llynQkyhFuIEJInIZ2VIwajFIGe5LzVM6Wlyp1FHEpg=
+github.com/goverland-labs/snapshot-sdk-go v0.4.2 h1:6WRO7oWKG+2iWn/xiI0sOztE6pz7z8PzCVLQ2IynEoc=
+github.com/goverland-labs/snapshot-sdk-go v0.4.2/go.mod h1:llynQkyhFuIEJInIZ2VIwajFIGe5LzVM6Wlyp1FHEpg=
 github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 h1:HcUWd006luQPljE73d5sk+/VgYPGUReEVz2y1/qylwY=
 github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1/go.mod h1:w9Y7gY31krpLmrVU5ZPG9H7l9fZuRu5/3R3S3FMtVQ4=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 h1:Ovs26xHkKqVztRpIrF/92BcuyuQ/YW4NSIpoGtfXNho=

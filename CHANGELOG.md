@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.4] - 2024-09-25
+
+### Changed
+- Up snapshot-sdk-go version
+
 ## [0.6.3] - 2024-09-25
 
 ### Added
