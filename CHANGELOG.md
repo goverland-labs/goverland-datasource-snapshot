@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Converting proposal snapshot to internal events
+
 ## [0.6.4] - 2024-09-25
 
 ### Changed

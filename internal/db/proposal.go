@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/goverland-labs/goverland-platform-events/events/aggregator"
@@ -281,6 +282,12 @@ func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error
 		scores = append(scores, float32(helpers.ZeroIfNil(unmarshaled.Scores[i])))
 	}
 
+	var prSnapshot *string
+	if unmarshaled.Snapshot != nil {
+		snapshotStr := strconv.FormatInt(*unmarshaled.Snapshot, 10)
+		prSnapshot = &snapshotStr
+	}
+
 	return s.publisher.PublishJSON(context.Background(), subject, aggregator.ProposalPayload{
 		ID:            proposal.ID,
 		Ipfs:          helpers.ZeroIfNil(unmarshaled.Ipfs),
@@ -300,7 +307,7 @@ func (s *ProposalService) publishEvent(subject string, proposal *Proposal) error
 		End:           int(unmarshaled.End),
 		Quorum:        unmarshaled.Quorum,
 		Privacy:       helpers.ZeroIfNil(unmarshaled.Privacy),
-		Snapshot:      helpers.ZeroIfNil(unmarshaled.Snapshot),
+		Snapshot:      helpers.ZeroIfNil(prSnapshot),
 		State:         helpers.ZeroIfNil(unmarshaled.State),
 		Link:          helpers.ZeroIfNil(unmarshaled.Link),
 		App:           helpers.ZeroIfNil(unmarshaled.App),
