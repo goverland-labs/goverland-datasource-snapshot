@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Yamashou/gqlgenc/clientv2"
@@ -41,11 +42,30 @@ func NewProposalsWorker(sdk *snapshot.SDK, proposals *db.ProposalService, checkI
 	}
 }
 
-func (w *ProposalWorker) Start(ctx context.Context) error {
+func (w *ProposalWorker) FetchList(ctx context.Context) error {
 	w.createdAfter = w.getLastProposalCreatedAt()
 
 	for {
 		if err := w.loop(ctx); err != nil {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			err := ctx.Err()
+			if errors.Is(err, context.Canceled) {
+				return nil
+			}
+
+			return err
+		case <-time.After(w.checkInterval):
+		}
+	}
+}
+
+func (w *ProposalWorker) MarkToRefetch(ctx context.Context) error {
+	for {
+		if err := w.tryToRefetchShutterProposals(); err != nil {
 			return err
 		}
 
@@ -156,6 +176,37 @@ func (w *ProposalWorker) fetchProposalsInternal(ctx context.Context, opts []snap
 	}
 }
 
+func (w *ProposalWorker) tryToRefetchShutterProposals() error {
+	ids, err := w.proposals.GetFinishedShutterProposals(voteProposalLimit)
+	if err != nil {
+		return fmt.Errorf("get finished shutter proposals: %w", err)
+	}
+
+	for _, id := range ids {
+		if err = w.proposals.MarkAsRefetched(id); err != nil {
+			return fmt.Errorf("mark refetched: %s: %w", id, err)
+		}
+	}
+
+	return nil
+}
+
+func (w *ProposalWorker) getLastProposalCreatedAt() time.Time {
+	var createdAfter time.Time
+
+	lastProposal, err := w.proposals.GetLatestProposal()
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get last fetched proposal")
+		return createdAfter
+	}
+
+	if lastProposal != nil {
+		createdAfter = lastProposal.CreatedAt.Add(-proposalCreatedAtGap)
+	}
+
+	return createdAfter
+}
+
 func (w *ProposalWorker) processProposals(proposals []*client.ProposalFragment) error {
 	for _, proposal := range proposals {
 		marshaled, err := json.Marshal(proposal)
@@ -182,20 +233,4 @@ func (w *ProposalWorker) processProposals(proposals []*client.ProposalFragment) 
 	}
 
 	return nil
-}
-
-func (w *ProposalWorker) getLastProposalCreatedAt() time.Time {
-	var createdAfter time.Time
-
-	lastProposal, err := w.proposals.GetLatestProposal()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to get last fetched proposal")
-		return createdAfter
-	}
-
-	if lastProposal != nil {
-		createdAfter = lastProposal.CreatedAt.Add(-proposalCreatedAtGap)
-	}
-
-	return createdAfter
 }

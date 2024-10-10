@@ -57,7 +57,8 @@ func (r *VoteRepo) Upsert(v *Vote) (isNew bool, err error) {
 // BatchCreate creates votes in batch
 func (r *VoteRepo) BatchCreate(data []Vote) error {
 	return r.conn.Model(&Vote{}).Clauses(clause.OnConflict{
-		DoNothing: true,
+		Columns:   []clause.Column{{Name: "id"}},
+		UpdateAll: true,
 	}).CreateInBatches(data, 500).Error
 }
 
