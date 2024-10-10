@@ -26,12 +26,13 @@ import (
 
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
+
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/delegate"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
-	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
-	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
@@ -275,7 +276,8 @@ func (a *Application) initUpdatesWorkers() error {
 
 	updateSpaceConsumer := updates.NewUpdateSpaceSettingsConsumer(spacesUpdater, fetcherWrapper, a.natsConn)
 
-	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals updates", proposals.FetchList, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("snapshot proposals mark to refetch", proposals.MarkToRefetch, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot active proposals updates", activeProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot unknown spaces updates", spaces.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
