@@ -20,12 +20,13 @@ import (
 )
 
 type Proposal struct {
-	ID        string `gorm:"primarykey"`
-	SpaceID   string `gorm:"index"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt  `gorm:"index"`
-	Snapshot  json.RawMessage `gorm:"type:jsonb;serializer:json"`
+	ID          string `gorm:"primarykey"`
+	SpaceID     string `gorm:"index"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	RefetchedAt sql.NullTime
+	DeletedAt   gorm.DeletedAt  `gorm:"index"`
+	Snapshot    json.RawMessage `gorm:"type:jsonb;serializer:json"`
 
 	VoteProcessed bool
 }
@@ -191,6 +192,41 @@ func (r *ProposalRepo) GetProposalForVotes(limit int) ([]string, error) {
 	return result, nil
 }
 
+func (r *ProposalRepo) GetFinishedShutterProposals(limit int) ([]string, error) {
+	var (
+		dummy = Proposal{}
+		_     = dummy.UpdatedAt
+		_     = dummy.DeletedAt
+		_     = dummy.RefetchedAt
+		_     = dummy.Snapshot
+	)
+
+	var ids []struct {
+		ID string
+	}
+
+	err := r.conn.Select("id").
+		Table("proposals").
+		Where("deleted_at is null and refetched_at is null").
+		Where("snapshot->> 'privacy' = 'shutter'").
+		Where("vote_processed = true").
+		Order("created_at asc").
+		Limit(limit).
+		Scan(&ids).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(ids))
+	for _, row := range ids {
+		result = append(result, row.ID)
+	}
+
+	return result, nil
+}
+
 func (r *ProposalRepo) MarkVotesProcessed(id string) error {
 	var (
 		dummy = Proposal{}
@@ -204,6 +240,37 @@ func (r *ProposalRepo) MarkVotesProcessed(id string) error {
 		Omit("updated_at").
 		Where("id = ?", id).
 		Update("vote_processed", true).
+		Error
+}
+
+func (r *ProposalRepo) RemoveFetchedVotes(id string) error {
+	var (
+		dummy = Vote{}
+		_     = dummy.ProposalID
+	)
+
+	return r.conn.
+		Where("proposal_id = ?", id).
+		Unscoped().
+		Delete(Vote{}).
+		Error
+}
+
+func (r *ProposalRepo) MarkProposalAsRefetched(id string) error {
+	var (
+		dummy = Proposal{}
+		_     = dummy.ID
+		_     = dummy.UpdatedAt
+		_     = dummy.VoteProcessed
+		_     = dummy.RefetchedAt
+	)
+
+	return r.conn.
+		Model(Proposal{}).
+		Omit("updated_at").
+		Where("id = ?", id).
+		Update("vote_processed", false).
+		Update("refetched_at", time.Now()).
 		Error
 }
 
@@ -328,6 +395,10 @@ func (s *ProposalService) GetProposalForVotes(limit int) ([]string, error) {
 	return s.repo.GetProposalForVotes(limit)
 }
 
+func (s *ProposalService) GetFinishedShutterProposals(limit int) ([]string, error) {
+	return s.repo.GetFinishedShutterProposals(limit)
+}
+
 func (s *ProposalService) GetLatestProposal() (*Proposal, error) {
 	p, err := s.repo.GetLatestProposal()
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -342,4 +413,16 @@ func (s *ProposalService) GetLatestProposal() (*Proposal, error) {
 
 func (s *ProposalService) MarkVotesProcessed(id string) error {
 	return s.repo.MarkVotesProcessed(id)
+}
+
+func (s *ProposalService) MarkAsRefetched(id string) error {
+	if err := s.repo.RemoveFetchedVotes(id); err != nil {
+		return fmt.Errorf("mark proposal for refetching: %w", err)
+	}
+
+	if err := s.repo.MarkProposalAsRefetched(id); err != nil {
+		return fmt.Errorf("mark proposal as refetched: %w", err)
+	}
+
+	return nil
 }
