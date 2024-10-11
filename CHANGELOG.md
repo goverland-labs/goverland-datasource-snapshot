@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.6] - 2024-10-11
+
 ### Added
 - Logic for refetching votes for finished shutter proposals
 
