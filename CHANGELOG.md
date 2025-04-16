@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Publish the event when collected votes for proposals 
+
 ## [0.6.6] - 2024-10-11
 
 ### Added

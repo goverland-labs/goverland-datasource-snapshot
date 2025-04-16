@@ -412,7 +412,19 @@ func (s *ProposalService) GetLatestProposal() (*Proposal, error) {
 }
 
 func (s *ProposalService) MarkVotesProcessed(id string) error {
-	return s.repo.MarkVotesProcessed(id)
+	if err := s.repo.MarkVotesProcessed(id); err != nil {
+		return err
+	}
+
+	if err := s.publisher.PublishJSON(
+		context.Background(),
+		aggregator.SubjectProposalVotesFetched,
+		aggregator.ProposalPayload{ID: id},
+	); err != nil {
+		log.Warn().Err(err).Msgf("publish proposal to %s: %s", aggregator.SubjectProposalVotesFetched, id)
+	}
+
+	return nil
 }
 
 func (s *ProposalService) MarkAsRefetched(id string) error {
