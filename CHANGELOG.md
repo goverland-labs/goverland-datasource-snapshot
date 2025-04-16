@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added copeland method as ranked voting
+
 ## [0.6.7] - 2025-04-16
 
 ### Added

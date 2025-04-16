@@ -25,6 +25,7 @@ const (
 	quadraticProposalType    ProposalType = "quadratic"
 	rankedChoiceProposalType ProposalType = "ranked-choice"
 	weightedProposalType     ProposalType = "weighted"
+	copelandProposalType     ProposalType = "copeland"
 	basicProposalType        ProposalType = "basic"
 )
 
@@ -159,7 +160,7 @@ func (t *TypedSignDataBuilder) Build(checksumVoter string, reason *string, choic
 	isTypes2 := strings.HasPrefix(pFragment.ID, "0x")
 
 	types := helpers.Ternary(isTypes2, VoteNumberTypes2, VoteNumberTypes)
-	if t.isProposalType(pFragment.Type, approvalProposalType, rankedChoiceProposalType) {
+	if t.isProposalType(pFragment.Type, approvalProposalType, rankedChoiceProposalType, copelandProposalType) {
 		types = helpers.Ternary(isTypes2, VoteNumbersTypes2, VoteNumbersTypes)
 	}
 	if isShutter || t.isProposalType(pFragment.Type, quadraticProposalType, weightedProposalType) {
