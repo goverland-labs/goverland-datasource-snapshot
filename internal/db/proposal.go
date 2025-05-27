@@ -208,6 +208,7 @@ func (r *ProposalRepo) GetFinishedShutterProposals(limit int) ([]string, error) 
 	err := r.conn.Select("id").
 		Table("proposals").
 		Where("deleted_at is null and refetched_at is null").
+		Where("to_timestamp((snapshot->'end')::double precision) + INTERVAL '3 hour' < NOW()").
 		Where("snapshot->> 'privacy' = 'shutter'").
 		Where("vote_processed = true").
 		Order("created_at asc").
