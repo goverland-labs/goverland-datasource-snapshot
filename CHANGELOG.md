@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.9] - 2025-05-27
+
 ### Changed
 - Refetch shielded votes after 3h of end voting date 
 
