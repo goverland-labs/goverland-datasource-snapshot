@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.11] - 2025-08-22
+
+### Fixed
+- Getting the list of votes and proposals
+
 ## [0.6.10] - 2025-08-22
 
 ### Fixed

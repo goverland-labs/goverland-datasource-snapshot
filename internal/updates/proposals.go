@@ -21,7 +21,7 @@ import (
 
 const (
 	proposalCreatedAtGap = time.Hour
-	proposalsPerRequest  = 500
+	proposalsPerRequest  = 100
 	proposalsMaxOffset   = 5000
 )
 
