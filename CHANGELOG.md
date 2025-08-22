@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.10] - 2025-08-22
+
+### Fixed
+- Getting the list of spaces
+
 ## [0.6.9] - 2025-05-27
 
 ### Changed
