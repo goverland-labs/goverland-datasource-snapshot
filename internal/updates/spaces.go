@@ -8,7 +8,7 @@ import (
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
 
-const spacesPerRequest = 500
+const spacesPerRequest = 100
 
 type SpacesWorker struct {
 	spaceUpdater *SpacesUpdater
