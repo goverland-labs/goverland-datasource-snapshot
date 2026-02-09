@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Method for getting delegates statement
+- Method for getting users info
+
 ## [0.6.11] - 2025-08-22
 
 ### Fixed

@@ -10,6 +10,7 @@ option go_package = "./delegatepb";
 service Delegate {
   rpc GetDelegates(GetDelegatesRequest) returns (GetDelegatesResponse);
   rpc GetDelegateProfile(GetDelegateProfileRequest) returns (GetDelegateProfileResponse);
+  rpc GetDelegatesStatement(GetDelegatesStatementRequest) returns (GetDelegatesStatementResponse);
 }
 
 message DelegateEntry {
@@ -57,4 +58,19 @@ message ProfileDelegateItem {
   string address = 1;
   double weight = 2;
   double delegated_power = 3;
+}
+
+message GetDelegatesStatementRequest {
+  string dao_original_id = 1;
+  repeated string addresses = 2;
+}
+
+message DelegateStatement {
+  string address = 1;
+  string statement = 2;
+}
+
+message GetDelegatesStatementResponse {
+  string dao_original_id = 1;
+  repeated DelegateStatement list = 2;
 }

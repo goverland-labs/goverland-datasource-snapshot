@@ -2,6 +2,8 @@ package delegate
 
 import (
 	"context"
+	"slices"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -100,5 +102,41 @@ func (g *GrpcServer) GetDelegateProfile(ctx context.Context, req *delegatepb.Get
 		PercentOfDelegators:  profile.PercentOfDelegators,
 		Delegates:            delegates,
 		Expiration:           expiration,
+	}, nil
+}
+
+func (g *GrpcServer) GetDelegatesStatement(ctx context.Context, req *delegatepb.GetDelegatesStatementRequest) (*delegatepb.GetDelegatesStatementResponse, error) {
+	originalID := strings.TrimSpace(req.GetDaoOriginalId())
+	if originalID == "" {
+		return nil, status.Error(codes.InvalidArgument, "dao origin id required")
+	}
+
+	addresses := make([]string, 0, len(req.Addresses))
+	for _, address := range req.Addresses {
+		if converted := strings.TrimSpace(address); converted != "" && !slices.Contains(addresses, converted) {
+			addresses = append(addresses, converted)
+		}
+	}
+
+	if len(addresses) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "addresses required")
+	}
+
+	info, err := g.service.GetDelegatesStatement(ctx, originalID, addresses)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get delegates statement: %v", err)
+	}
+
+	list := make([]*delegatepb.DelegateStatement, 0, len(info))
+	for _, d := range info {
+		list = append(list, &delegatepb.DelegateStatement{
+			Address:   d.Address,
+			Statement: d.Statement,
+		})
+	}
+
+	return &delegatepb.GetDelegatesStatementResponse{
+		DaoOriginalId: originalID,
+		List:          list,
 	}, nil
 }
