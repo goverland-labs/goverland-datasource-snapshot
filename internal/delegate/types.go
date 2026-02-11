@@ -1,9 +1,22 @@
 package delegate
 
 import (
+	"context"
 	"encoding/json"
 	"time"
+
+	"github.com/goverland-labs/snapshot-sdk-go/client"
+	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 )
+
+type snapshotSDK interface {
+	ListStatements(
+		ctx context.Context,
+		spaceID string,
+		delegatesAddresses []string,
+		opts ...snapshot.ListStatementsOption,
+	) ([]*client.StatementFragment, error)
+}
 
 type GetDelegatesParams struct {
 	Dao       string
@@ -25,6 +38,11 @@ type Delegate struct {
 	PercentOfDelegators  float64 `json:"percent_of_delegators"`
 	VotingPower          float64 `json:"voting_power"`
 	PercentOfVotingPower float64 `json:"percent_of_voting_power"`
+}
+
+type Statement struct {
+	Address   string
+	Statement string
 }
 
 type GetDelegateProfileParams struct {

@@ -27,11 +27,13 @@ import (
 	"github.com/goverland-labs/snapshot-sdk-go/snapshot"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/delegatepb"
+	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/userspb"
 	"github.com/goverland-labs/goverland-datasource-snapshot/protocol/votingpb"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/delegate"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/fetcher"
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/updates"
+	"github.com/goverland-labs/goverland-datasource-snapshot/internal/users"
 	"github.com/goverland-labs/goverland-datasource-snapshot/pkg/gnosis"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/config"
@@ -245,8 +247,11 @@ func (a *Application) initGrpc() error {
 	votingGrpc := voting.NewGrpcServer(a.actionVotingService)
 	votingpb.RegisterVotingServer(grpcServer, votingGrpc)
 
-	delegatesGrpc := delegate.NewGrpcServer(delegate.NewService(gnosis.NewSDK()))
+	delegatesGrpc := delegate.NewGrpcServer(delegate.NewService(gnosis.NewSDK(), a.sdk))
 	delegatepb.RegisterDelegateServer(grpcServer, delegatesGrpc)
+
+	usersGrpc := users.NewGrpcServer(users.NewService(a.sdk))
+	userspb.RegisterUsersServer(grpcServer, usersGrpc)
 
 	grpcWorker := grpcsrv.NewGrpcServerWorker("snapshot", grpcServer, a.cfg.InternalAPI.Bind)
 	a.manager.AddWorker(grpcWorker)
@@ -283,8 +288,8 @@ func (a *Application) initUpdatesWorkers() error {
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load historical", votes.LoadHistorical, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot votes load active", votes.LoadActive, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 	a.manager.AddWorker(process.NewCallbackWorker("snapshot messages updates", messages.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
-	a.manager.AddWorker(process.NewCallbackWorker("delete-proposal-consumer", deleteProposals.Start))
-	a.manager.AddWorker(process.NewCallbackWorker("update-space-settings-consumer", updateSpaceConsumer.Start))
+	a.manager.AddWorker(process.NewCallbackWorker("delete-proposal-consumer", deleteProposals.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
+	a.manager.AddWorker(process.NewCallbackWorker("update-space-settings-consumer", updateSpaceConsumer.Start, process.RetryOnErrorOpt{Timeout: 5 * time.Second}))
 
 	return nil
 }

@@ -3,6 +3,7 @@ package delegate
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/helpers"
@@ -10,11 +11,15 @@ import (
 )
 
 type Service struct {
-	gnosisSDK *gnosis.SDK
+	gnosisSDK   *gnosis.SDK
+	snapshotSDK snapshotSDK
 }
 
-func NewService(gnosisSDK *gnosis.SDK) *Service {
-	return &Service{gnosisSDK: gnosisSDK}
+func NewService(gnosisSDK *gnosis.SDK, snapshotSDK snapshotSDK) *Service {
+	return &Service{
+		gnosisSDK:   gnosisSDK,
+		snapshotSDK: snapshotSDK,
+	}
 }
 
 func (s *Service) GetDelegates(ctx context.Context, req GetDelegatesParams) (DelegatesWrapper, error) {
@@ -118,4 +123,39 @@ func (s *Service) searchDelegateProfile(ctx context.Context, req GetDelegatesPar
 		Delegates: delegates,
 		Total:     1,
 	}, nil
+}
+
+func (s *Service) GetDelegatesStatement(ctx context.Context, spaceID string, addresses []string) ([]Statement, error) {
+	converted := make([]string, 0, len(addresses))
+	for _, addr := range addresses {
+		converted = append(converted, strings.ToLower(addr))
+	}
+
+	list, err := s.snapshotSDK.ListStatements(ctx, spaceID, converted)
+	if err != nil {
+		return nil, fmt.Errorf("s.snapshotSDK.ListStatements: %w", err)
+	}
+
+	statements := make([]Statement, 0, len(addresses))
+	for _, info := range list {
+		var address, statement string
+
+		if val := info.GetDelegate(); val != nil {
+			address = strings.ToLower(*val)
+		}
+		if val := info.GetStatement(); val != nil {
+			statement = *val
+		}
+
+		if address == "" {
+			continue
+		}
+
+		statements = append(statements, Statement{
+			Address:   address,
+			Statement: statement,
+		})
+	}
+
+	return statements, nil
 }
