@@ -137,7 +137,7 @@ func (r *ProposalRepo) GetProposalIDsForUpdate(spaces []string, interval time.Du
 		Where("deleted_at is null").
 		Where(r.conn.
 			Where("to_timestamp((snapshot->'start')::double precision) <= now() and to_timestamp((snapshot->'end')::double precision) >= now()").
-			Or("updated_at < to_timestamp((snapshot->'end')::double precision) and to_timestamp((snapshot->'end')::double precision) < now()"),
+			Or("updated_at < to_timestamp((snapshot->'end')::double precision) AND to_timestamp((snapshot->'end')::double precision) < now() AND to_timestamp((snapshot->'end')::double precision) > now() - interval '7 days'"),
 		).
 		Order(orderBy).
 		Limit(limit)

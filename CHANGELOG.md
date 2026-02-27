@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Update sync for active proposals: votes and proposal updates
+
 ## [0.6.12] - 2026-02-11
 
 ### Added

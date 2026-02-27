@@ -28,6 +28,7 @@ const (
 
 type unprocessedSpacesFinder interface {
 	FindSpacesWithNewVotes(after time.Time) ([]string, error)
+	FindSpacesWithProposalsUpdates(after time.Time) ([]string, error)
 }
 
 type VoteWorker struct {
@@ -156,7 +157,7 @@ func (w *VoteWorker) loopActive(ctx context.Context) error {
 		return nil
 	}
 
-	ids, err := w.proposals.GetProposalIDsForUpdate(spaces, gap, proposalsPerRequest, true)
+	ids, err := w.proposals.GetProposalIDsForUpdate(spaces, 0, proposalsPerRequest, true)
 	if err != nil {
 		return fmt.Errorf("get proposals for votes: %w", err)
 	}
