@@ -99,6 +99,14 @@ func (r *MessageRepo) FindLatestMCI() (int, error) {
 }
 
 func (r *MessageRepo) FindSpacesWithNewVotes(after time.Time) ([]string, error) {
+	return r.findSpacesWithUpdates(after, VoteMessage)
+}
+
+func (r *MessageRepo) FindSpacesWithProposalsUpdates(after time.Time) ([]string, error) {
+	return r.findSpacesWithUpdates(after, ProposalMessage)
+}
+
+func (r *MessageRepo) findSpacesWithUpdates(after time.Time, mt MessageType) ([]string, error) {
 	var dummy Message
 	_ = dummy.Space
 	_ = dummy.Timestamp
@@ -108,7 +116,7 @@ func (r *MessageRepo) FindSpacesWithNewVotes(after time.Time) ([]string, error) 
 		Select("space").
 		Distinct().
 		Table("messages").
-		Where("type = @type", sql.Named("type", VoteMessage)).
+		Where("type = @type", sql.Named("type", mt)).
 		Where("space != ''").
 		Where("timestamp >= @timestamp", sql.Named("timestamp", after)).
 		Pluck("space", &spaces).
@@ -211,6 +219,15 @@ func (s *MessageService) GetLatestMCI() (int, error) {
 
 func (s *MessageService) FindSpacesWithNewVotes(after time.Time) ([]string, error) {
 	spaces, err := s.repo.FindSpacesWithNewVotes(after)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return spaces, err
+}
+
+func (s *MessageService) FindSpacesWithProposalsUpdates(after time.Time) ([]string, error) {
+	spaces, err := s.repo.FindSpacesWithProposalsUpdates(after)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}

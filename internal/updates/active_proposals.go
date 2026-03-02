@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/goverland-labs/snapshot-sdk-go/client"
@@ -13,21 +14,25 @@ import (
 	"github.com/goverland-labs/goverland-datasource-snapshot/internal/db"
 )
 
-const gap = 30 * time.Minute
+const (
+	gapMessages       = 1 * time.Hour
+	gapProposalUpdate = 10 * time.Minute
+)
 
 type ActiveProposalsWorker struct {
 	sdk       *snapshot.SDK
 	proposals *db.ProposalService
 
-	checkInterval time.Duration
+	checkInterval     time.Duration
+	unrpocessedSpaces unprocessedSpacesFinder
 }
 
-func NewActiveProposalsWorker(sdk *snapshot.SDK, proposals *db.ProposalService, checkInterval time.Duration) *ActiveProposalsWorker {
+func NewActiveProposalsWorker(sdk *snapshot.SDK, proposals *db.ProposalService, unrpocessedSpaces unprocessedSpacesFinder, checkInterval time.Duration) *ActiveProposalsWorker {
 	return &ActiveProposalsWorker{
-		sdk:       sdk,
-		proposals: proposals,
-
-		checkInterval: checkInterval,
+		sdk:               sdk,
+		proposals:         proposals,
+		unrpocessedSpaces: unrpocessedSpaces,
+		checkInterval:     checkInterval,
 	}
 }
 
@@ -51,35 +56,45 @@ func (w *ActiveProposalsWorker) Start(ctx context.Context) error {
 }
 
 func (w *ActiveProposalsWorker) loop(ctx context.Context) error {
-	ids, err := w.proposals.GetProposalIDsForUpdate(nil, gap, proposalsPerRequest, false)
+	spaces, err := w.unrpocessedSpaces.FindSpacesWithProposalsUpdates(time.Now().Add(-gapMessages))
 	if err != nil {
-		return err
+		return fmt.Errorf("get paces with new votes: %w", err)
 	}
-
-	if len(ids) == 0 {
+	if len(spaces) == 0 {
 		return nil
 	}
 
-	proposals, err := w.fetchProposalsInternal(ctx, []snapshot.ListProposalOption{
-		snapshot.ListProposalWithOrderBy("created", client.OrderDirectionAsc),
-		snapshot.ListProposalWithIDFilter(ids...),
-	})
+	for {
+		ids, err := w.proposals.GetProposalIDsForUpdate(spaces, gapProposalUpdate, proposalsPerRequest, false)
+		if err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
-	}
+		if len(ids) == 0 {
+			break
+		}
 
-	log.Info().Int("requested", len(ids)).Int("fetched", len(proposals)).Msg("updated proposals")
+		proposals, err := w.fetchProposalsInternal(ctx, []snapshot.ListProposalOption{
+			snapshot.ListProposalWithOrderBy("created", client.OrderDirectionAsc),
+			snapshot.ListProposalWithIDFilter(ids...),
+		})
 
-	if err := w.processProposals(proposals); err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	forDeletion := findProposalIDsForDeletion(ids, proposals)
-	log.Info().Int("delete", len(forDeletion)).Msg("deleted proposals")
+		log.Info().Int("requested", len(ids)).Int("fetched", len(proposals)).Msg("updated proposals")
 
-	if err := w.proposals.Delete(forDeletion); err != nil {
-		return err
+		if err := w.processProposals(proposals); err != nil {
+			return err
+		}
+
+		forDeletion := findProposalIDsForDeletion(ids, proposals)
+		log.Info().Int("delete", len(forDeletion)).Msg("deleted proposals")
+
+		if err := w.proposals.Delete(forDeletion); err != nil {
+			return err
+		}
 	}
 
 	return nil
